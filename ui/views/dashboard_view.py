@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QGridLayout, QTableWidget, QTableWidgetItem, QProgressBar, QHeaderView
+    QFrame, QGridLayout, QTableWidget, QTableWidgetItem, QProgressBar, QHeaderView,
+    QMessageBox, QAbstractItemView
 )
 from PySide6.QtCore import Qt, Signal
 from database.connection import SessionLocal
@@ -32,6 +33,7 @@ class StatCard(QFrame):
 class DashboardView(QWidget):
     # Navigation signals to request tab changes from main window
     request_nav = Signal(str)
+    data_changed = Signal()
 
     def __init__(self):
         super().__init__()
@@ -108,15 +110,43 @@ class DashboardView(QWidget):
         table_card.setProperty("class", "card-widget")
         tc_layout = QVBoxLayout(table_card)
 
+        # Header with Delete Option
+        table_header_layout = QHBoxLayout()
         lbl_recent = QLabel("Recent Data Import History")
         lbl_recent.setStyleSheet("font-size: 15px; font-weight: bold; color: #F8FAFC;")
+        
+        btn_delete_import = QPushButton("🗑️ Delete Selected Import File")
+        btn_delete_import.setStyleSheet("""
+            QPushButton {
+                background-color: #EF4444;
+                color: #FFFFFF;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #DC2626;
+            }
+            QPushButton:pressed {
+                background-color: #B91C1C;
+            }
+        """)
+        btn_delete_import.clicked.connect(self.delete_selected_import)
+
+        table_header_layout.addWidget(lbl_recent)
+        table_header_layout.addStretch()
+        table_header_layout.addWidget(btn_delete_import)
+        tc_layout.addLayout(table_header_layout)
         
         self.recent_table = QTableWidget(0, 5)
         self.recent_table.setHorizontalHeaderLabels(["Import Date", "File Name", "Total Rows", "New Records", "Duplicates"])
         self.recent_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.recent_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.recent_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.recent_table.setSelectionMode(QAbstractItemView.SingleSelection)
 
-        tc_layout.addWidget(lbl_recent)
         tc_layout.addWidget(self.recent_table)
         main_layout.addWidget(table_card)
 
@@ -136,10 +166,53 @@ class DashboardView(QWidget):
             for imp in stats['recent_imports']:
                 row = self.recent_table.rowCount()
                 self.recent_table.insertRow(row)
-                self.recent_table.setItem(row, 0, QTableWidgetItem(imp.imported_at.strftime("%Y-%m-%d %H:%M")))
-                self.recent_table.setItem(row, 1, QTableWidgetItem(imp.file_name))
+                
+                date_item = QTableWidgetItem(imp.imported_at.strftime("%Y-%m-%d %H:%M"))
+                file_item = QTableWidgetItem(imp.file_name)
+                file_item.setData(Qt.UserRole, imp.id)  # Store import record ID
+                
+                self.recent_table.setItem(row, 0, date_item)
+                self.recent_table.setItem(row, 1, file_item)
                 self.recent_table.setItem(row, 2, QTableWidgetItem(str(imp.total_rows)))
                 self.recent_table.setItem(row, 3, QTableWidgetItem(str(imp.new_records)))
                 self.recent_table.setItem(row, 4, QTableWidgetItem(str(imp.duplicate_records)))
         finally:
             session.close()
+
+    def delete_selected_import(self):
+        selected_rows = self.recent_table.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.warning(self, "No File Selected", "Please click on an imported file row in the table below to select it for deletion.")
+            return
+
+        row = selected_rows[0].row()
+        file_item = self.recent_table.item(row, 1)
+        if not file_item:
+            return
+
+        import_id = file_item.data(Qt.UserRole)
+        file_name = file_item.text()
+
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Delete Import File",
+            f"Are you sure you want to delete the import history record for:\n\n📄 '{file_name}'?\n\nThis will remove the file record from your import history log.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if confirm == QMessageBox.Yes:
+            session = SessionLocal()
+            try:
+                success, msg = Repository.delete_import_history(session, import_id)
+                if success:
+                    QMessageBox.information(self, "Delete Successful", msg)
+                    self.refresh_dashboard()
+                    self.data_changed.emit()
+                else:
+                    QMessageBox.warning(self, "Delete Failed", msg)
+            except Exception as e:
+                session.rollback()
+                QMessageBox.critical(self, "Error Deleting Import Record", str(e))
+            finally:
+                session.close()

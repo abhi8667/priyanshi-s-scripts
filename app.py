@@ -92,6 +92,8 @@ class MainWindow(QMainWindow):
             # Signal wiring
             if hasattr(view_inst, 'request_nav'):
                 view_inst.request_nav.connect(self.navigate_to)
+            if hasattr(view_inst, 'data_changed'):
+                view_inst.data_changed.connect(self.on_data_changed)
             if hasattr(view_inst, 'import_completed'):
                 view_inst.import_completed.connect(self.on_data_changed)
             if hasattr(view_inst, 'allocation_done'):

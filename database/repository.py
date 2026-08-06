@@ -155,7 +155,7 @@ class Repository:
                 "remaining": max(0, v.capacity - filled)
             })
 
-        recent_imports = session.query(ImportHistory).order_by(ImportHistory.imported_at.desc()).limit(5).all()
+        recent_imports = session.query(ImportHistory).order_by(ImportHistory.imported_at.desc()).limit(10).all()
 
         return {
             "total_students": total_students,
@@ -168,3 +168,23 @@ class Repository:
             "venue_utilization": venue_stats,
             "recent_imports": recent_imports
         }
+
+    @classmethod
+    def delete_import_history(cls, session: Session, import_id: int) -> Tuple[bool, str]:
+        """Deletes an import history record from SQLite and records an audit log."""
+        imp = session.query(ImportHistory).filter(ImportHistory.id == import_id).first()
+        if not imp:
+            return False, "Import record not found."
+
+        file_name = imp.file_name
+        session.delete(imp)
+
+        audit = AuditLog(
+            action="IMPORT_FILE_DELETED",
+            entity_type="ImportHistory",
+            entity_id=str(import_id),
+            details=f"Deleted import history record for file '{file_name}'."
+        )
+        session.add(audit)
+        session.commit()
+        return True, f"Successfully deleted import file record '{file_name}'."
