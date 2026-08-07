@@ -196,7 +196,7 @@ class DashboardView(QWidget):
         confirm = QMessageBox.question(
             self,
             "Confirm Delete Import File",
-            f"Are you sure you want to delete the import history record for:\n\n📄 '{file_name}'?\n\nThis will remove the file record from your import history log.",
+            f"Are you sure you want to delete the import record for:\n\n📄 '{file_name}'?\n\n⚠️ WARNING: This will delete the import file record AND remove all students imported from this file from the system database!",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )

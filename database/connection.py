@@ -38,6 +38,15 @@ def get_db_session():
         session.close()
 
 def init_db():
-    """Creates all database tables defined in models."""
+    """Creates all database tables defined in models and applies schema migrations."""
     from database.models import Student, Department, Program, Venue, TimeSlot, ImportHistory, BackupHistory, AuditLog, AppSettings
     Base.metadata.create_all(bind=engine)
+
+    # Auto-migration: ensure import_history_id exists on students table
+    with engine.connect() as conn:
+        cursor = conn.exec_driver_sql("PRAGMA table_info(students)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "import_history_id" not in columns:
+            conn.exec_driver_sql("ALTER TABLE students ADD COLUMN import_history_id INTEGER REFERENCES import_history(id)")
+            conn.commit()
+

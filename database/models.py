@@ -64,6 +64,7 @@ class Student(Base):
 
     department_id: Mapped[Optional[int]] = mapped_column(ForeignKey("departments.id"), nullable=True, index=True)
     program_id: Mapped[Optional[int]] = mapped_column(ForeignKey("programs.id"), nullable=True, index=True)
+    import_history_id: Mapped[Optional[int]] = mapped_column(ForeignKey("import_history.id"), nullable=True, index=True)
 
     group_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
     venue_id: Mapped[Optional[int]] = mapped_column(ForeignKey("venues.id"), nullable=True, index=True)
@@ -80,6 +81,7 @@ class Student(Base):
     program: Mapped[Optional["Program"]] = relationship("Program", back_populates="students")
     venue: Mapped[Optional["Venue"]] = relationship("Venue", back_populates="students")
     time_slot: Mapped[Optional["TimeSlot"]] = relationship("TimeSlot", back_populates="students")
+    import_history: Mapped[Optional["ImportHistory"]] = relationship("ImportHistory", back_populates="students")
 
 class ImportHistory(Base):
     __tablename__ = "import_history"
@@ -92,6 +94,8 @@ class ImportHistory(Base):
     updated_records: Mapped[int] = mapped_column(Integer, default=0)
     duplicate_records: Mapped[int] = mapped_column(Integer, default=0)
     imported_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    students: Mapped[List["Student"]] = relationship("Student", back_populates="import_history")
 
 class BackupHistory(Base):
     __tablename__ = "backup_history"

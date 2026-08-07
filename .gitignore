@@ -1,0 +1,17 @@
+# Python Byte Code
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+data/*.db
+data/backups/
+
+# Exports & Temporary Files
+exports/*.xlsx
+~$*.xlsx
+logs/*.log

@@ -73,7 +73,7 @@ def test_10k_student_benchmark():
     t0 = time.time()
     res_ven = VenueOptimizer.optimize_allocations(auto_backup=False)
     t_ven = time.time() - t0
-    print(f"[BENCHMARK] MILP/Greedy Venue Allocation for 10,000 students completed in {t_ven:.2f}s")
+    print(f"[BENCHMARK] Proportional Stratified Venue Allocation for 10,000 students completed in {t_ven:.2f}s")
     assert res_ven.newly_allocated_venues == 10000
 
     # Benchmark Export

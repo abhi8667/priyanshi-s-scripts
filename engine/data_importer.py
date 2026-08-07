@@ -78,6 +78,19 @@ class DataImporter:
             }
             existing_names_list = [(s.full_name, s.usn) for s in existing_students_map.values()]
 
+            # Create ImportHistory record first
+            imp_record = ImportHistory(
+                file_name=file_path.name,
+                file_hash=file_hash,
+                total_rows=len(df),
+                new_records=0,
+                updated_records=0,
+                duplicate_records=0,
+                imported_at=datetime.utcnow()
+            )
+            session.add(imp_record)
+            session.flush()
+
             for idx, row in df_renamed.iterrows():
                 row_num = idx + 2  # Excel 1-based header offset
                 raw_usn = str(row['usn']).strip() if pd.notna(row['usn']) else ""
@@ -107,6 +120,8 @@ class DataImporter:
                 # Check if USN exists in DB
                 if clean_usn_key in existing_students_map:
                     stu = existing_students_map[clean_usn_key]
+                    if stu.import_history_id is None:
+                        stu.import_history_id = imp_record.id
                     
                     # Update fields if faculty corrected typo, preserving allocation!
                     changed = False
@@ -149,6 +164,7 @@ class DataImporter:
                         status=StudentStatus.ACTIVE.value,
                         department_id=dept_obj.id,
                         program_id=prog_obj.id,
+                        import_history_id=imp_record.id,
                         created_at=datetime.utcnow()
                     )
                     session.add(new_stu)
@@ -156,17 +172,10 @@ class DataImporter:
                     existing_names_list.append((raw_name, raw_usn))
                     new_count += 1
 
-            # Log Import History
-            imp_record = ImportHistory(
-                file_name=file_path.name,
-                file_hash=file_hash,
-                total_rows=len(df),
-                new_records=new_count,
-                updated_records=updated_count,
-                duplicate_records=duplicate_usn_count,
-                imported_at=datetime.utcnow()
-            )
-            session.add(imp_record)
+            # Update final counts on ImportHistory
+            imp_record.new_records = new_count
+            imp_record.updated_records = updated_count
+            imp_record.duplicate_records = duplicate_usn_count
 
             # Audit Log
             audit = AuditLog(

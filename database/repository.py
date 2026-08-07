@@ -15,23 +15,73 @@ class Repository:
     @staticmethod
     def get_or_create_department(session: Session, name: str, code: Optional[str] = None) -> Department:
         clean_name = name.strip()
-        dept = session.query(Department).filter(func.lower(Department.name) == clean_name.lower()).first()
+        dept_code = (code or clean_name).strip().upper()[:20]
+        if len(dept_code) > 4 and not code and " " in clean_name:
+            words = [w for w in clean_name.replace("&", "").split() if w]
+            if len(words) >= 2:
+                derived_code = "".join([w[0] for w in words]).upper()[:10]
+            else:
+                derived_code = clean_name[:4].upper()
+        else:
+            derived_code = dept_code
+
+        # 1. Search for existing department matching code OR name (case-insensitive)
+        dept = session.query(Department).filter(
+            or_(
+                func.lower(Department.code) == derived_code.lower(),
+                func.lower(Department.code) == clean_name.lower(),
+                func.lower(Department.name) == clean_name.lower()
+            )
+        ).first()
+
         if not dept:
-            dept_code = code or clean_name[:4].upper()
-            dept = Department(name=clean_name, code=dept_code)
+            # 2. Ensure derived_code is strictly unique among existing codes
+            base_code = derived_code
+            counter = 1
+            while session.query(Department).filter(func.lower(Department.code) == derived_code.lower()).first():
+                derived_code = f"{base_code[:15]}{counter}"
+                counter += 1
+
+            dept = Department(name=clean_name, code=derived_code)
             session.add(dept)
             session.flush()
+
         return dept
 
     @staticmethod
     def get_or_create_program(session: Session, name: str, code: Optional[str] = None) -> Program:
         clean_name = name.strip()
-        prog = session.query(Program).filter(func.lower(Program.name) == clean_name.lower()).first()
+        prog_code = (code or clean_name).strip().upper()[:20]
+        if len(prog_code) > 4 and not code and " " in clean_name:
+            words = [w for w in clean_name.replace("&", "").split() if w]
+            if len(words) >= 2:
+                derived_code = "".join([w[0] for w in words]).upper()[:10]
+            else:
+                derived_code = clean_name[:4].upper()
+        else:
+            derived_code = prog_code
+
+        # 1. Search for existing program matching code OR name (case-insensitive)
+        prog = session.query(Program).filter(
+            or_(
+                func.lower(Program.code) == derived_code.lower(),
+                func.lower(Program.code) == clean_name.lower(),
+                func.lower(Program.name) == clean_name.lower()
+            )
+        ).first()
+
         if not prog:
-            prog_code = code or clean_name[:4].upper()
-            prog = Program(name=clean_name, code=prog_code)
+            # 2. Ensure derived_code is strictly unique among existing codes
+            base_code = derived_code
+            counter = 1
+            while session.query(Program).filter(func.lower(Program.code) == derived_code.lower()).first():
+                derived_code = f"{base_code[:15]}{counter}"
+                counter += 1
+
+            prog = Program(name=clean_name, code=derived_code)
             session.add(prog)
             session.flush()
+
         return prog
 
     @staticmethod
@@ -171,20 +221,96 @@ class Repository:
 
     @classmethod
     def delete_import_history(cls, session: Session, import_id: int) -> Tuple[bool, str]:
-        """Deletes an import history record from SQLite and records an audit log."""
+        """Deletes an import history record and removes all associated students from SQLite."""
         imp = session.query(ImportHistory).filter(ImportHistory.id == import_id).first()
         if not imp:
             return False, "Import record not found."
 
         file_name = imp.file_name
+
+        # 1. Find associated students by import_history_id
+        students = session.query(Student).filter(Student.import_history_id == import_id).all()
+
+        # 2. Smart fallback for legacy imports where import_history_id was None
+        if not students:
+            all_imports_count = session.query(ImportHistory).count()
+            if all_imports_count == 1:
+                # If only 1 import record exists, all non-deleted students belong to this import
+                students = session.query(Student).all()
+            else:
+                from datetime import timedelta
+                start_time = imp.imported_at - timedelta(seconds=120)
+                end_time = imp.imported_at + timedelta(seconds=120)
+                students = session.query(Student).filter(
+                    Student.created_at >= start_time,
+                    Student.created_at <= end_time
+                ).all()
+
+        deleted_student_count = len(students)
+
+        # Delete student records
+        for s in students:
+            session.delete(s)
+
+        # Delete import history record
         session.delete(imp)
 
         audit = AuditLog(
             action="IMPORT_FILE_DELETED",
             entity_type="ImportHistory",
             entity_id=str(import_id),
-            details=f"Deleted import history record for file '{file_name}'."
+            details=f"Deleted import file record '{file_name}' and removed {deleted_student_count} associated students."
         )
         session.add(audit)
         session.commit()
-        return True, f"Successfully deleted import file record '{file_name}'."
+        return True, f"Successfully deleted import file '{file_name}' and removed {deleted_student_count} associated students."
+
+
+    @classmethod
+    def delete_venue(cls, session: Session, venue_id: int) -> Tuple[bool, str]:
+        """Deletes a venue record and resets venue assignments for any affected students."""
+        venue = session.query(Venue).filter(Venue.id == venue_id).first()
+        if not venue:
+            return False, "Venue not found."
+
+        name = venue.name
+        session.query(Student).filter(Student.venue_id == venue_id).update(
+            {Student.venue_id: None, Student.venue_allocated_at: None},
+            synchronize_session=False
+        )
+        session.delete(venue)
+
+        audit = AuditLog(
+            action="VENUE_DELETED",
+            entity_type="Venue",
+            entity_id=str(venue_id),
+            details=f"Deleted venue '{name}' (ID {venue_id}) and reset venue assignments for affected students."
+        )
+        session.add(audit)
+        session.commit()
+        return True, f"Successfully deleted venue '{name}'."
+
+    @classmethod
+    def delete_time_slot(cls, session: Session, time_slot_id: int) -> Tuple[bool, str]:
+        """Deletes a time slot record and resets time slot assignments for any affected students."""
+        ts = session.query(TimeSlot).filter(TimeSlot.id == time_slot_id).first()
+        if not ts:
+            return False, "Time slot not found."
+
+        slot_name = ts.slot_name
+        session.query(Student).filter(Student.time_slot_id == time_slot_id).update(
+            {Student.time_slot_id: None, Student.venue_allocated_at: None},
+            synchronize_session=False
+        )
+        session.delete(ts)
+
+        audit = AuditLog(
+            action="TIMESLOT_DELETED",
+            entity_type="TimeSlot",
+            entity_id=str(time_slot_id),
+            details=f"Deleted time slot '{slot_name}' (ID {time_slot_id}) and reset time slot assignments for affected students."
+        )
+        session.add(audit)
+        session.commit()
+        return True, f"Successfully deleted time slot '{slot_name}'."
+

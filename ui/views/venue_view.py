@@ -58,9 +58,10 @@ class VenueAllocationView(QWidget):
         v_head.addWidget(btn_add_v)
         vb_layout.addLayout(v_head)
 
-        self.venue_table = QTableWidget(0, 3)
-        self.venue_table.setHorizontalHeaderLabels(["Venue Name", "Capacity", "Status"])
+        self.venue_table = QTableWidget(0, 4)
+        self.venue_table.setHorizontalHeaderLabels(["Venue Name", "Capacity", "Status", "Action"])
         self.venue_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.venue_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         vb_layout.addWidget(self.venue_table)
 
         lists_layout.addWidget(venue_box)
@@ -83,9 +84,10 @@ class VenueAllocationView(QWidget):
         s_head.addWidget(btn_add_s)
         sb_layout.addLayout(s_head)
 
-        self.slot_table = QTableWidget(0, 3)
-        self.slot_table.setHorizontalHeaderLabels(["Slot Name", "Start Time", "End Time"])
+        self.slot_table = QTableWidget(0, 4)
+        self.slot_table.setHorizontalHeaderLabels(["Slot Name", "Start Time", "End Time", "Action"])
         self.slot_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.slot_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         sb_layout.addWidget(self.slot_table)
 
         lists_layout.addWidget(slot_box)
@@ -116,6 +118,12 @@ class VenueAllocationView(QWidget):
                 self.venue_table.setItem(row, 1, QTableWidgetItem(str(v.capacity)))
                 self.venue_table.setItem(row, 2, QTableWidgetItem("Active" if v.is_active else "Inactive"))
 
+                btn_del_v = QPushButton("Remove")
+                btn_del_v.setProperty("class", "danger-btn")
+                btn_del_v.setStyleSheet("padding: 3px 8px; font-size: 11px;")
+                btn_del_v.clicked.connect(lambda checked=False, vid=v.id, vname=v.name: self.delete_venue(vid, vname))
+                self.venue_table.setCellWidget(row, 3, btn_del_v)
+
             # Refresh Time Slots
             slots = session.query(TimeSlot).all()
             self.slot_table.setRowCount(0)
@@ -125,6 +133,12 @@ class VenueAllocationView(QWidget):
                 self.slot_table.setItem(row, 0, QTableWidgetItem(s.slot_name))
                 self.slot_table.setItem(row, 1, QTableWidgetItem(s.start_time))
                 self.slot_table.setItem(row, 2, QTableWidgetItem(s.end_time))
+
+                btn_del_s = QPushButton("Remove")
+                btn_del_s.setProperty("class", "danger-btn")
+                btn_del_s.setStyleSheet("padding: 3px 8px; font-size: 11px;")
+                btn_del_s.clicked.connect(lambda checked=False, sid=s.id, sname=s.slot_name: self.delete_timeslot(sid, sname))
+                self.slot_table.setCellWidget(row, 3, btn_del_s)
 
             # Capacity Report
             cap_report = VenueOptimizer.check_capacity(session)
@@ -155,8 +169,32 @@ class VenueAllocationView(QWidget):
                     Repository.get_or_create_venue(session, name.strip(), cap)
                     session.commit()
                     self.refresh_tables()
+                    self.venue_allocation_done.emit()
                 finally:
                     session.close()
+
+    def delete_venue(self, venue_id: int, venue_name: str):
+        reply = QMessageBox.question(
+            self,
+            "Confirm Remove Venue",
+            f"Are you sure you want to remove the venue '{venue_name}'?\n\n"
+            "Any students currently assigned to this venue will have their venue allocation reset.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            session = SessionLocal()
+            try:
+                ok, msg = Repository.delete_venue(session, venue_id)
+                if ok:
+                    self.refresh_tables()
+                    self.venue_allocation_done.emit()
+                else:
+                    QMessageBox.warning(self, "Error", msg)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to delete venue: {str(e)}")
+            finally:
+                session.close()
 
     def add_timeslot(self):
         name, ok1 = QInputDialog.getText(self, "Add Time Slot", "Slot Name (e.g. Morning Session):")
@@ -170,8 +208,33 @@ class VenueAllocationView(QWidget):
                         Repository.get_or_create_time_slot(session, name.strip(), start.strip(), end.strip())
                         session.commit()
                         self.refresh_tables()
+                        self.venue_allocation_done.emit()
                     finally:
                         session.close()
+
+    def delete_timeslot(self, slot_id: int, slot_name: str):
+        reply = QMessageBox.question(
+            self,
+            "Confirm Remove Time Slot",
+            f"Are you sure you want to remove the time slot '{slot_name}'?\n\n"
+            "Any students currently assigned to this time slot will have their time slot allocation reset.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            session = SessionLocal()
+            try:
+                ok, msg = Repository.delete_time_slot(session, slot_id)
+                if ok:
+                    self.refresh_tables()
+                    self.venue_allocation_done.emit()
+                else:
+                    QMessageBox.warning(self, "Error", msg)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to delete time slot: {str(e)}")
+            finally:
+                session.close()
+
 
     def run_optimization(self):
         try:
