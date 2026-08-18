@@ -15,7 +15,7 @@ for directory in [DATA_DIR, BACKUP_DIR, LOGS_DIR, EXPORTS_DIR]:
 
 # Database URI
 DB_PATH = DATA_DIR / "induction_system.db"
-DATABASE_URL = f"sqlite:///{DB_PATH.as_posix()}"
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH.as_posix()}")
 
 # Application Info
 APP_NAME = "NexusAllocate Pro - College Induction Allocation System"

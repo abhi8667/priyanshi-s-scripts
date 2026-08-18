@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAllocate Pro | Induction Allocation</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Ambient Floating Glow Background -->
+    <div class="ambient-bg">
+        <div class="glow-blob blob-1"></div>
+        <div class="glow-blob blob-2"></div>
+        <div class="glow-blob blob-3"></div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Responsive Glass Header -->
+    <header class="app-header">
+        <div class="brand">
+            <span>⚡ NEXUS ALLOCATE</span>
+            <span class="brand-badge">PRO v2.0</span>
+        </div>
+        <nav class="nav-links">
+            <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-tab="import">📥 Import</button>
+            <button class="nav-btn" data-tab="students">👥 Students</button>
+            <button class="nav-btn" data-tab="groups">🔀 Groups</button>
+            <button class="nav-btn" data-tab="venues">🏛️ Venues</button>
+            <button class="nav-btn" data-tab="backups">🛡️ Backups</button>
+            <button class="nav-btn" data-tab="exports">📤 Exports</button>
+            <button class="nav-btn" data-tab="logs">📜 Logs</button>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+        <!-- 1. Dashboard View -->
+        <section id="dashboard" class="tab-pane active">
+            <div class="stats-grid">
+                <div class="stat-card glass-panel">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Registered</span>
+                        <div class="stat-icon-wrapper">👥</div>
+                    </div>
+                    <div class="stat-value" id="stat-total-students">0</div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-header">
+                        <span class="stat-title">Group Stratified</span>
+                        <div class="stat-icon-wrapper" style="color:var(--accent-cyan)">🔀</div>
+                    </div>
+                    <div class="stat-value" id="stat-allocated-groups" style="color:var(--accent-cyan)">0</div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-header">
+                        <span class="stat-title">Venue Assigned</span>
+                        <div class="stat-icon-wrapper" style="color:var(--accent-emerald)">🏛️</div>
+                    </div>
+                    <div class="stat-value" id="stat-allocated-venues" style="color:var(--accent-emerald)">0</div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-header">
+                        <span class="stat-title">Pending Action</span>
+                        <div class="stat-icon-wrapper" style="color:var(--accent-amber)">⏳</div>
+                    </div>
+                    <div class="stat-value" id="stat-pending" style="color:var(--accent-amber)">0</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px;">
+                <div class="section-card glass-panel">
+                    <div class="section-header">
+                        <span class="section-title">📊 Group Stratification Ratio</span>
+                    </div>
+                    <div id="group-dist-list"></div>
+                </div>
+                <div class="section-card glass-panel">
+                    <div class="section-header">
+                        <span class="section-title">📥 Recent Ingestion Batches</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>File Name</th>
+                                    <th>Records</th>
+                                    <th>Import Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-imports-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Import View -->
+        <section id="import" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">📥 Ingest Student Dataset (Excel / CSV)</span>
+                </div>
+                <div class="drop-zone" id="file-drop-zone">
+                    <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none">
+                    <div style="font-size:3rem; margin-bottom:12px;">📁</div>
+                    <div style="font-weight:700; font-size:1.1rem; margin-bottom:6px;">Tap or Drop Excel / CSV File Here</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Supports Levenshtein header matching for candidate lists</div>
+                </div>
+                <div id="upload-status" style="margin-top:16px; font-weight:600;"></div>
+
+                <div id="mapping-wrapper" style="display:none; margin-top:28px; border-top:1px solid var(--border-subtle); padding-top:24px;">
+                    <h3 style="margin-bottom:16px;">RapidFuzz Header Alias Matcher</h3>
+                    <div id="mapping-container"></div>
+                    <button id="commit-import-btn" class="btn btn-primary" style="margin-top:20px; width:100%; font-size:1rem; padding:14px;">
+                        ✨ Commit Import & Save Records
+                    </button>
+                    <div id="commit-message" style="margin-top:16px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Students Database View -->
+        <section id="students" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header" style="flex-wrap:wrap; gap:12px;">
+                    <span class="section-title">👥 Student Roster Directory</span>
+                    <span id="students-count-lbl" style="font-size:0.85rem; color:var(--text-muted); font-weight:600;"></span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-bottom:20px;">
+                    <input type="text" id="student-search-input" class="form-control" placeholder="🔍 Search USN, Name, Number..." onkeyup="loadStudents()">
+                    <select id="student-group-filter" class="form-select" onchange="loadStudents()">
+                        <option value="">All Groups</option>
+                        <option value="Group A">Group A</option>
+                        <option value="Group B">Group B</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>USN / ID</th>
+                                <th>Full Name</th>
+                                <th>Department</th>
+                                <th>Group</th>
+                                <th>Venue</th>
+                                <th>Time Slot</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Group Allocation View -->
+        <section id="groups" class="tab-pane">
+            <div class="section-card glass-panel" style="text-align:center; padding:48px 24px;">
+                <div style="font-size:3.5rem; margin-bottom:16px;">🔀</div>
+                <h2 style="margin-bottom:12px; font-weight:800;">SHA-256 Stratified Group Allocation</h2>
+                <p style="color:var(--text-secondary); max-width:650px; margin: 0 auto 28px auto; line-height:1.6;">
+                    Deterministically balances students into Group A & Group B using SHA-256 USN digest hashes. 
+                    Guarantees equal gender & department distribution with strict immutability.
+                </p>
+                <button id="run-group-btn" class="btn btn-primary" style="font-size:1.05rem; padding:14px 36px;">
+                    ⚡ Execute Group Stratification
+                </button>
+                <div id="group-alloc-status" style="margin-top:28px;"></div>
+            </div>
+        </section>
+
+        <!-- 5. Venue Allocation View -->
+        <section id="venues" class="tab-pane">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-bottom:28px;">
+                <!-- Add Venue Card -->
+                <div class="section-card glass-panel">
+                    <h3 style="margin-bottom:16px;">🏛️ Add Venue</h3>
+                    <form id="add-venue-form">
+                        <div class="form-group">
+                            <label class="form-label">Venue Name</label>
+                            <input type="text" id="venue-name-input" class="form-control" placeholder="Main Auditorium" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Seating Capacity</label>
+                            <input type="number" id="venue-cap-input" class="form-control" placeholder="300" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="width:100%;">+ Add Venue</button>
+                    </form>
+                </div>
+                <!-- Add Slot Card -->
+                <div class="section-card glass-panel">
+                    <h3 style="margin-bottom:16px;">⏰ Add Time Slot</h3>
+                    <form id="add-slot-form">
+                        <div class="form-group">
+                            <label class="form-label">Slot Name</label>
+                            <input type="text" id="slot-name-input" class="form-control" placeholder="Morning Batch (Slot 1)" required>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="form-group">
+                                <label class="form-label">Start Time</label>
+                                <input type="text" id="slot-start-input" class="form-control" placeholder="09:30 AM" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">End Time</label>
+                                <input type="text" id="slot-end-input" class="form-control" placeholder="11:30 AM" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="width:100%;">+ Add Time Slot</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Active Venues & Slots -->
+            <div class="section-card glass-panel" style="margin-bottom:28px;">
+                <h3 style="margin-bottom:16px;">🏛️ Venue Capacities & Utilization</h3>
+                <div id="venues-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-bottom:28px;"></div>
+                
+                <h3 style="margin-bottom:16px;">⏰ Time Slots</h3>
+                <div id="slots-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px;"></div>
+            </div>
+
+            <!-- Run Solver Card -->
+            <div class="section-card glass-panel" style="text-align:center; padding:40px 24px;">
+                <h2 style="margin-bottom:10px;">PuLP MILP Venue Constraint Solver</h2>
+                <p style="color:var(--text-secondary); max-width:600px; margin: 0 auto 24px auto;">
+                    Solves venue capacities without over-capacity risks and minimizes cohort department splitting.
+                </p>
+                <button id="run-venue-btn" class="btn btn-primary" style="padding:14px 36px; font-size:1.05rem;">
+                    🚀 Solve Venue Allocation
+                </button>
+                <div id="venue-alloc-status" style="margin-top:24px;"></div>
+            </div>
+        </section>
+
+        <!-- 6. Backup & Rollback View -->
+        <section id="backups" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">🛡️ SQLite Database Snapshots & Rollback</span>
+                    <button id="create-backup-btn" class="btn btn-primary">+ Create Snapshot</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Snapshot File</th>
+                                <th>Timestamp</th>
+                                <th>Size</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="backups-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Export Center View -->
+        <section id="exports" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">📤 Enterprise Multi-Format Export Center</span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+                    <div class="glass-panel" style="padding:28px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:3rem; margin-bottom:12px;">📊</div>
+                        <h3 style="margin-bottom:8px;">Master Excel Workbook</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Multi-tab workbook with Formula Injection Sanitization</p>
+                        <a href="/api/export/excel" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Master .XLSX</a>
+                    </div>
+                    <div class="glass-panel" style="padding:28px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:3rem; margin-bottom:12px;">📑</div>
+                        <h3 style="margin-bottom:8px;">Group CSV Rosters</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Group A & Group B Student CSVS</p>
+                        <a href="/api/export/csv" class="btn btn-secondary" style="width:100%; text-decoration:none;">Download CSV</a>
+                    </div>
+                    <div class="glass-panel" style="padding:28px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:3rem; margin-bottom:12px;">📄</div>
+                        <h3 style="margin-bottom:8px;">Printable PDF Attendance</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">ReportLab PDF Attendance Rosters</p>
+                        <a href="/api/export/pdf" class="btn btn-secondary" style="width:100%; text-decoration:none;">Download PDF</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. Audit Logs View -->
+        <section id="logs" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">📜 Audit Trail Logs</span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>Entity</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

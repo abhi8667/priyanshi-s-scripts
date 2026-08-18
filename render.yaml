@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: nexusallocate-pro
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn web_app:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexusallocate-db
+          property: connectionString
+
+databases:
+  - name: nexusallocate-db
+    plan: free

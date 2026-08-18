@@ -3,15 +3,20 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+venv/
+.venv/
 
-# Databases
+# Databases & Uploads
 *.db
 *.db-shm
 *.db-wal
 data/*.db
 data/backups/
+data/uploads/
 
 # Exports & Temporary Files
 exports/*.xlsx
+exports/*.csv
+exports/*.pdf
 ~$*.xlsx
 logs/*.log
