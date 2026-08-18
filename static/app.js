@@ -288,16 +288,23 @@ async function runGroupAVenueAllocation() {
     const statusEl = document.getElementById('ga-venue-status');
     statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing Branch-Mixing Solver for Group A...</span>';
 
-    // Collect Group A Slots
+    // Collect Group A Slots (up to 6)
     const slots = [];
-    ['ga-slot-1', 'ga-slot-2', 'ga-slot-3'].forEach(id => {
+    ['ga-slot-1', 'ga-slot-2', 'ga-slot-3', 'ga-slot-4', 'ga-slot-5', 'ga-slot-6'].forEach(id => {
         const val = document.getElementById(id)?.value?.trim();
         if (val) slots.push({ slot_name: val, start_time: '09:30 AM', end_time: '11:30 AM' });
     });
 
-    // Collect Group A Venues
+    // Collect Group A Venues (up to 6)
     const venues = [];
-    [['ga-v1-name', 'ga-v1-cap'], ['ga-v2-name', 'ga-v2-cap'], ['ga-v3-name', 'ga-v3-cap']].forEach(([nId, cId]) => {
+    [
+        ['ga-v1-name', 'ga-v1-cap'],
+        ['ga-v2-name', 'ga-v2-cap'],
+        ['ga-v3-name', 'ga-v3-cap'],
+        ['ga-v4-name', 'ga-v4-cap'],
+        ['ga-v5-name', 'ga-v5-cap'],
+        ['ga-v6-name', 'ga-v6-cap']
+    ].forEach(([nId, cId]) => {
         const name = document.getElementById(nId)?.value?.trim();
         const cap = parseInt(document.getElementById(cId)?.value || '0');
         if (name && cap > 0) venues.push({ name: name, capacity: cap });
@@ -334,16 +341,23 @@ async function runGroupBVenueAllocation() {
     const statusEl = document.getElementById('gb-venue-status');
     statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing Branch-Mixing Solver for Group B...</span>';
 
-    // Collect Group B Slots
+    // Collect Group B Slots (up to 6)
     const slots = [];
-    ['gb-slot-1', 'gb-slot-2'].forEach(id => {
+    ['gb-slot-1', 'gb-slot-2', 'gb-slot-3', 'gb-slot-4', 'gb-slot-5', 'gb-slot-6'].forEach(id => {
         const val = document.getElementById(id)?.value?.trim();
         if (val) slots.push({ slot_name: val, start_time: '09:30 AM', end_time: '11:30 AM' });
     });
 
-    // Collect Group B Venues
+    // Collect Group B Venues (up to 6)
     const venues = [];
-    [['gb-v1-name', 'gb-v1-cap'], ['gb-v2-name', 'gb-v2-cap']].forEach(([nId, cId]) => {
+    [
+        ['gb-v1-name', 'gb-v1-cap'],
+        ['gb-v2-name', 'gb-v2-cap'],
+        ['gb-v3-name', 'gb-v3-cap'],
+        ['gb-v4-name', 'gb-v4-cap'],
+        ['gb-v5-name', 'gb-v5-cap'],
+        ['gb-v6-name', 'gb-v6-cap']
+    ].forEach(([nId, cId]) => {
         const name = document.getElementById(nId)?.value?.trim();
         const cap = parseInt(document.getElementById(cId)?.value || '0');
         if (name && cap > 0) venues.push({ name: name, capacity: cap });
