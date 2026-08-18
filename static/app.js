@@ -372,20 +372,25 @@ async function deleteSlot(id) {
 
 async function runVenueAllocation() {
     const statusEl = document.getElementById('venue-alloc-status');
-    statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing PuLP MILP Solver...</span>';
+    const targetGroup = document.getElementById('venue-target-group-select')?.value || 'All';
+    statusEl.innerHTML = `<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing MILP Branch-Mixing Solver for ${targetGroup}...</span>`;
 
     try {
-        const res = await fetch('/api/venues/allocate', { method: 'POST' });
+        const res = await fetch('/api/venues/allocate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_group: targetGroup })
+        });
         const result = await res.json();
 
         if (result.success) {
             statusEl.innerHTML = `
                 <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
                     <h3 style="margin-bottom:6px;">🏛️ Venue Optimization Completed!</h3>
-                    <p style="font-size:1rem; margin-top:4px;">Allocated Students: <strong>${result.allocated_count}</strong> | Solver: <strong>${result.solver_name}</strong></p>
-                    <p style="font-size:0.8rem; opacity:0.8; margin-top:6px;">Execution Time: ${result.execution_time_seconds.toFixed(2)}s</p>
+                    <p style="font-size:1rem; margin-top:4px;">Target: <strong>${targetGroup}</strong> | Allocated Students: <strong>${result.allocated_count}</strong></p>
+                    <p style="font-size:0.8rem; opacity:0.8; margin-top:6px;">Equal branch distribution applied across venues.</p>
                 </div>`;
-            showToast("Venue allocation complete!", 'success');
+            showToast(`Venue allocation complete for ${targetGroup}!`, 'success');
             loadVenues();
         }
     } catch (err) {

@@ -292,14 +292,18 @@ def delete_slot(slot_id: int):
     finally:
         session.close()
 
+class VenueAllocationRequest(BaseModel):
+    target_group: Optional[str] = None
+
 @app.post("/api/venues/allocate")
-def run_venue_allocation():
+def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
     try:
-        res = VenueOptimizer.optimize_allocations()
+        grp = req.target_group if req and req.target_group and req.target_group != "All" else None
+        res = VenueOptimizer.optimize_allocations(target_group=grp)
         return JSONResponse(content={
             "success": True,
             "allocated_count": res.newly_allocated_venues,
-            "unallocated_count": res.total_processed - res.newly_allocated_venues,
+            "unallocated_count": max(0, res.total_processed - res.newly_allocated_venues),
             "execution_time_seconds": getattr(res, 'execution_time_seconds', 0.5),
             "solver_name": "PuLP / Proportional MILP Solver",
             "details": res.warnings
@@ -350,10 +354,11 @@ def restore_backup(req: RestoreBackupRequest):
 
 # --- Export Services APIs ---
 @app.get("/api/export/excel")
-def export_excel():
+def export_excel(group: Optional[str] = None):
     session = SessionLocal()
     try:
-        file_path = ExportService.generate_master_excel(session)
+        target_grp = group if group and group.strip() and group.lower() != "master" and group.lower() != "all" else None
+        file_path = ExportService.generate_master_excel(session, group_name=target_grp)
         return FileResponse(file_path, filename=Path(file_path).name, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     finally:
         session.close()

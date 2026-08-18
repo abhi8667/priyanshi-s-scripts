@@ -33,33 +33,30 @@ class ExportService:
         return value
 
     @classmethod
-    def export_excel_master(cls, destination_path: Path) -> Path:
-        """Generates a styled Excel workbook with multiple tabs: Master, Group A, Group B, Department, Venue."""
+    def export_excel_master(cls, destination_path: Path, group_name: Optional[str] = None) -> Path:
+        """Generates a styled Excel workbook for Master, Group A, or Group B allocations."""
         session: Session = SessionLocal()
         try:
             wb = openpyxl.Workbook()
-            # Remove default sheet
-            wb.remove(wb.active)
+            wb.remove(wb.active)  # Remove default sheet
 
-            students = session.query(Student).filter(Student.is_deleted == False).order_by(Student.usn.asc()).all()
+            query = session.query(Student).filter(Student.is_deleted == False)
+            if group_name and group_name.strip():
+                query = query.filter(Student.group_name == group_name.strip())
+
+            students = query.order_by(Student.group_name.asc(), Student.usn.asc()).all()
 
             header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
             header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-            thin_border = Border(
-                left=Side(style='thin', color='D1D5DB'),
-                right=Side(style='thin', color='D1D5DB'),
-                top=Side(style='thin', color='D1D5DB'),
-                bottom=Side(style='thin', color='D1D5DB')
-            )
 
             columns = ["USN", "Student ID", "Full Name", "Gender", "Department", "Program", "Group", "Venue", "Time Slot", "Status"]
 
-            # Sheet 1: Master Allocation
-            ws_master = wb.create_sheet(title="Master Allocation")
-            ws_master.append(columns)
+            title = f"{group_name} Allocations" if group_name else "Master Allocation"
+            ws = wb.create_sheet(title=title[:31])
+            ws.append(columns)
 
             for col_num in range(1, len(columns) + 1):
-                cell = ws_master.cell(row=1, column=col_num)
+                cell = ws.cell(row=1, column=col_num)
                 cell.fill = header_fill
                 cell.font = header_font
                 cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -72,12 +69,38 @@ class ExportService:
                     cls.sanitize_cell(s.gender),
                     cls.sanitize_cell(s.department.name if s.department else ""),
                     cls.sanitize_cell(s.program.name if s.program else ""),
-                    cls.sanitize_cell(s.group_name or "Unassigned"),
-                    cls.sanitize_cell(s.venue.name if s.venue else "Unassigned"),
-                    cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else "Unassigned"),
+                    cls.sanitize_cell(s.group_name or ""),
+                    cls.sanitize_cell(s.venue.name if s.venue else ""),
+                    cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else ""),
                     cls.sanitize_cell(s.status)
                 ]
-                ws_master.append(row)
+                ws.append(row)
+
+            # If exporting Combined Master, add individual tabs for Group A, Group B
+            if not group_name:
+                for grp in ["Group A", "Group B"]:
+                    ws_grp = wb.create_sheet(title=grp)
+                    ws_grp.append(columns)
+                    for col_num in range(1, len(columns) + 1):
+                        cell = ws_grp.cell(row=1, column=col_num)
+                        cell.fill = header_fill
+                        cell.font = header_font
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+                    
+                    grp_students = [s for s in students if s.group_name == grp]
+                    for s in grp_students:
+                        ws_grp.append([
+                            cls.sanitize_cell(s.usn),
+                            cls.sanitize_cell(s.student_id or ""),
+                            cls.sanitize_cell(s.full_name),
+                            cls.sanitize_cell(s.gender),
+                            cls.sanitize_cell(s.department.name if s.department else ""),
+                            cls.sanitize_cell(s.program.name if s.program else ""),
+                            cls.sanitize_cell(s.group_name or ""),
+                            cls.sanitize_cell(s.venue.name if s.venue else ""),
+                            cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else ""),
+                            cls.sanitize_cell(s.status)
+                        ])
 
             # Auto-fit columns
             for sheet in wb.worksheets:
@@ -92,6 +115,29 @@ class ExportService:
             raise ExportError(f"Excel export failed: {str(e)}")
         finally:
             session.close()
+
+    @classmethod
+    def generate_master_excel(cls, session: Session, group_name: Optional[str] = None) -> str:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        prefix = f"Group_{group_name.replace(' ', '_')}" if group_name else "Master_Combined"
+        dest = EXPORTS_DIR / f"{prefix}_Allocations_{timestamp}.xlsx"
+        cls.export_excel_master(dest, group_name=group_name)
+        return str(dest)
+
+    @classmethod
+    def generate_group_csv(cls, session: Session, group_name: Optional[str] = None) -> str:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        prefix = f"Group_{group_name.replace(' ', '_')}" if group_name else "Master"
+        dest = EXPORTS_DIR / f"{prefix}_Allocations_{timestamp}.csv"
+        cls.export_csv(dest)
+        return str(dest)
+
+    @classmethod
+    def generate_pdf_attendance(cls, session: Session, group_name: Optional[str] = None) -> str:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        dest = EXPORTS_DIR / f"Attendance_Sheet_{timestamp}.pdf"
+        cls.export_pdf_attendance_sheet(dest)
+        return str(dest)
 
     @classmethod
     def export_csv(cls, destination_path: Path) -> Path:

@@ -225,9 +225,17 @@
             <!-- Run Solver Card -->
             <div class="section-card glass-panel" style="text-align:center; padding:40px 24px;">
                 <h2 style="margin-bottom:10px;">PuLP MILP Venue Constraint Solver</h2>
-                <p style="color:var(--text-secondary); max-width:600px; margin: 0 auto 24px auto;">
-                    Solves venue capacities without over-capacity risks and minimizes cohort department splitting.
+                <p style="color:var(--text-secondary); max-width:600px; margin: 0 auto 20px auto;">
+                    Proportionally distributes branches across venues so cohort groups interact across departments.
                 </p>
+                <div style="max-width:320px; margin: 0 auto 20px auto;">
+                    <label class="form-label" style="text-align:left;">Target Group for Venue Allocation</label>
+                    <select id="venue-target-group-select" class="form-select">
+                        <option value="All">All Groups (Group A + Group B)</option>
+                        <option value="Group A">Target: Group A Only</option>
+                        <option value="Group B">Target: Group B Only</option>
+                    </select>
+                </div>
                 <button id="run-venue-btn" class="btn btn-primary" style="padding:14px 36px; font-size:1.05rem;">
                     🚀 Solve Venue Allocation
                 </button>
@@ -264,23 +272,29 @@
                 <div class="section-header">
                     <span class="section-title">📤 Enterprise Multi-Format Export Center</span>
                 </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
-                    <div class="glass-panel" style="padding:28px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:3rem; margin-bottom:12px;">📊</div>
-                        <h3 style="margin-bottom:8px;">Master Excel Workbook</h3>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Multi-tab workbook with Formula Injection Sanitization</p>
-                        <a href="/api/export/excel" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Master .XLSX</a>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📗</div>
+                        <h3 style="margin-bottom:6px;">Group A Excel</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Group A Student USNs, Branches, Slots & Venues</p>
+                        <a href="/api/export/excel?group=Group%20A" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Group A .XLSX</a>
                     </div>
-                    <div class="glass-panel" style="padding:28px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:3rem; margin-bottom:12px;">📑</div>
-                        <h3 style="margin-bottom:8px;">Group CSV Rosters</h3>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Group A & Group B Student CSVS</p>
-                        <a href="/api/export/csv" class="btn btn-secondary" style="width:100%; text-decoration:none;">Download CSV</a>
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📙</div>
+                        <h3 style="margin-bottom:6px;">Group B Excel</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Group B Student USNs, Branches, Slots & Venues</p>
+                        <a href="/api/export/excel?group=Group%20B" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Group B .XLSX</a>
                     </div>
-                    <div class="glass-panel" style="padding:28px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:3rem; margin-bottom:12px;">📄</div>
-                        <h3 style="margin-bottom:8px;">Printable PDF Attendance</h3>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">ReportLab PDF Attendance Rosters</p>
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📘</div>
+                        <h3 style="margin-bottom:6px;">Combined Master Excel</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">All Students & Multi-Tab Report (Master, Group A, Group B)</p>
+                        <a href="/api/export/excel?group=Master" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Combined .XLSX</a>
+                    </div>
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📄</div>
+                        <h3 style="margin-bottom:6px;">Printable PDF Attendance</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">ReportLab PDF Attendance Rosters</p>
                         <a href="/api/export/pdf" class="btn btn-secondary" style="width:100%; text-decoration:none;">Download PDF</a>
                     </div>
                 </div>
