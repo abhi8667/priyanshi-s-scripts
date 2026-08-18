@@ -161,16 +161,24 @@ def commit_import(req: CommitImportRequest):
 
     session = SessionLocal()
     try:
-        # Strictly isolate session: wipe all previous student records so the database reflects ONLY the newly uploaded dataset
-        session.query(Student).delete()
+        # Soft delete previous student records so the session dataset reflects ONLY the newly uploaded file
+        session.query(Student).filter(Student.is_deleted == False).update(
+            {Student.is_deleted: True},
+            synchronize_session=False
+        )
         session.commit()
 
         res = DataImporter.import_excel(file_path, req.mappings)
+
+        total_rows = res.get("total_rows", 0)
+        new_students = res.get("new_students", 0)
+        updated_students = res.get("updated_students", 0)
+
         return JSONResponse(content={
             "success": True,
-            "imported_count": res.get("imported_count", 0),
-            "new_count": res.get("new_records", 0),
-            "updated_count": res.get("updated_records", 0),
+            "imported_count": total_rows,
+            "new_count": new_students,
+            "updated_count": updated_students,
             "warnings": res.get("warnings", [])
         })
     except Exception as e:
