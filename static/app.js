@@ -40,6 +40,14 @@ function switchTab(tabId) {
     const modePills = document.querySelectorAll('.mode-pill');
     const tabPanes = document.querySelectorAll('.tab-pane');
     const stepItems = document.querySelectorAll('.step-item');
+    const navMenu = document.getElementById('nav-pills-menu');
+    const hamIcon = document.getElementById('hamburger-icon');
+
+    // Close mobile menu
+    if (navMenu) navMenu.classList.remove('open');
+    if (hamIcon) {
+        hamIcon.className = 'fa-solid fa-bars';
+    }
 
     modePills.forEach(b => b.classList.remove('active'));
     tabPanes.forEach(pane => pane.classList.remove('active'));
@@ -62,12 +70,68 @@ function switchTab(tabId) {
         if (tabId === 'students') loadStudents();
         if (tabId === 'backups') loadBackups();
     }
+
+    // Update Mobile Thumb Zone Action Bar
+    updateThumbZoneBar(tabId);
 }
 
-// Navigation Controller
+// Mobile Thumb Zone Action Bar Updater
+function updateThumbZoneBar(tabId) {
+    const bar = document.getElementById('thumb-zone-bar');
+    const btn = document.getElementById('thumb-action-btn');
+    const label = document.getElementById('thumb-btn-label');
+    const icon = document.getElementById('thumb-btn-icon');
+    if (!bar || !btn || !label) return;
+
+    if (tabId === 'import') {
+        label.innerText = 'Step 1: Choose Excel File';
+        icon.className = 'fa-solid fa-cloud-arrow-up';
+        btn.className = 'btn btn-amber';
+        btn.onclick = () => document.getElementById('excel-file-input')?.click();
+    } else if (tabId === 'groups') {
+        label.innerText = 'Step 2: Run Stratification';
+        icon.className = 'fa-solid fa-bolt';
+        btn.className = 'btn btn-amber';
+        btn.onclick = () => runGroupAllocation();
+    } else if (tabId === 'group-a-venues') {
+        label.innerText = 'Step 3: Allocate Group A';
+        icon.className = 'fa-solid fa-bolt';
+        btn.className = 'btn btn-amber';
+        btn.onclick = () => runGroupAVenueAllocation();
+    } else if (tabId === 'group-b-venues') {
+        label.innerText = 'Step 4: Allocate Group B';
+        icon.className = 'fa-solid fa-bolt';
+        btn.className = 'btn btn-sage';
+        btn.onclick = () => runGroupBVenueAllocation();
+    } else if (tabId === 'exports') {
+        label.innerText = 'Step 5: Download Master Excel';
+        icon.className = 'fa-solid fa-file-excel';
+        btn.className = 'btn btn-amber';
+        btn.onclick = () => window.location.href = '/api/export/excel?group=Master';
+    } else {
+        label.innerText = 'Go to Dashboard';
+        icon.className = 'fa-solid fa-chart-pie';
+        btn.className = 'btn btn-raised';
+        btn.onclick = () => switchTab('dashboard');
+    }
+}
+
+// Navigation & Hamburger Controller
 function initNavigation() {
     const modePills = document.querySelectorAll('.mode-pill');
     const stepItems = document.querySelectorAll('.step-item');
+    const hamBtn = document.getElementById('hamburger-toggle');
+    const navMenu = document.getElementById('nav-pills-menu');
+    const hamIcon = document.getElementById('hamburger-icon');
+
+    if (hamBtn && navMenu) {
+        hamBtn.addEventListener('click', () => {
+            const isOpen = navMenu.classList.toggle('open');
+            if (hamIcon) {
+                hamIcon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+            }
+        });
+    }
 
     modePills.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -82,6 +146,9 @@ function initNavigation() {
             switchTab(targetTab);
         });
     });
+
+    // Initial thumb bar setup
+    updateThumbZoneBar('dashboard');
 }
 
 // 0. Dashboard View

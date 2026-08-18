@@ -12,21 +12,26 @@
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
-    <!-- Kombai #17 Header -->
-    <header class="app-header">
+    <!-- Sticky Kombai #17 Header -->
+    <header class="app-header raised">
         <div class="brand-wrapper">
-            <div class="brand-icon raised">
+            <div class="brand-icon raised-sm">
                 <i class="fa-solid fa-graduation-cap text-2xl text-[#E8A552]"></i>
             </div>
             <div>
                 <p class="brand-sub">Induction Program Manager</p>
                 <h1 class="brand-title">NexusAllocate Pro</h1>
-                <p class="font-mono text-xs text-[#A89D91] mt-0.5" id="live-clock">Stratified Group & Venue Optimization</p>
+                <p class="font-mono text-xs text-[#A89D91]" id="live-clock">Stratified Group & Venue Optimization</p>
             </div>
         </div>
 
-        <!-- Kombai #17 Mode Pills -->
-        <nav class="nav-pills">
+        <!-- Mobile Hamburger Toggle Button -->
+        <button class="hamburger-btn" id="hamburger-toggle" aria-label="Toggle Menu">
+            <i class="fa-solid fa-bars" id="hamburger-icon"></i>
+        </button>
+
+        <!-- Navigation Pills Drawer -->
+        <nav class="nav-pills" id="nav-pills-menu">
             <button class="mode-pill active" data-tab="dashboard">
                 <i class="fa-solid fa-chart-pie"></i> Dashboard
             </button>
@@ -442,6 +447,13 @@
             </div>
         </section>
     </main>
+
+    <!-- Mobile Sticky Bottom Thumb Zone Action Bar -->
+    <div class="thumb-zone-bar" id="thumb-zone-bar">
+        <button id="thumb-action-btn" class="btn btn-amber">
+            <i class="fa-solid fa-bolt" id="thumb-btn-icon"></i> <span id="thumb-btn-label">Primary Action</span>
+        </button>
+    </div>
 
     <script src="/static/app.js"></script>
 </body>
