@@ -212,87 +212,46 @@
                     <i class="fa-solid fa-building-user text-[#E8A552]"></i> Step 3: Configure Slots & Venues for Group A
                 </div>
                 <p class="font-body text-sm text-[#8A7F73] mb-6">
-                    Define up to 6 time slots for Group A (Slots 2–6 are optional) and assign available venues. 
-                    The solver will divide Group A students equally across venues by branch.
+                    Add as many time slots and venues as you need for Group A. 
+                    The solver will divide Group A students equally across all configured venues by branch.
                 </p>
 
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-bottom:28px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-bottom:28px;">
                     <!-- Group A Slot Setup -->
                     <div class="card-panel dim">
-                        <h4 class="font-display font-semibold text-md text-[#4A4239] mb-4">
-                            <i class="fa-solid fa-clock text-[#E8A552]"></i> Group A Time Slots (Up to 6)
-                        </h4>
-                        <div class="form-group">
-                            <label class="form-label">Slot 1 Name (Required)</label>
-                            <input type="text" id="ga-slot-1" class="form-control" value="Slot 1 (Morning)">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-display font-semibold text-md text-[#4A4239]">
+                                <i class="fa-solid fa-clock text-[#E8A552]"></i> Group A Time Slots
+                            </h4>
+                            <button onclick="addDynamicSlot('ga')" class="btn btn-raised" style="padding:6px 14px; font-size:0.8rem;">
+                                + Add Slot
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 2 Name (Optional)</label>
-                            <input type="text" id="ga-slot-2" class="form-control" value="Slot 2 (Afternoon)">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 3 Name (Optional)</label>
-                            <input type="text" id="ga-slot-3" class="form-control" value="Slot 3 (Evening)">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 4 Name (Optional)</label>
-                            <input type="text" id="ga-slot-4" class="form-control" placeholder="Leave blank if not needed">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 5 Name (Optional)</label>
-                            <input type="text" id="ga-slot-5" class="form-control" placeholder="Leave blank if not needed">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 6 Name (Optional)</label>
-                            <input type="text" id="ga-slot-6" class="form-control" placeholder="Leave blank if not needed">
+                        <div id="ga-slots-container">
+                            <div class="form-group ga-slot-row flex items-center gap-2 mb-3">
+                                <input type="text" class="form-control ga-slot-input" value="Slot 1 (Morning)">
+                            </div>
                         </div>
                     </div>
 
                     <!-- Group A Venue Setup -->
                     <div class="card-panel dim">
-                        <h4 class="font-display font-semibold text-md text-[#4A4239] mb-4">
-                            <i class="fa-solid fa-landmark text-[#E8A552]"></i> Group A Venues & Capacities (Up to 6)
-                        </h4>
-                        <div class="form-group">
-                            <label class="form-label">Venue 1 (Required)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="ga-v1-name" class="form-control" value="Main Auditorium">
-                                <input type="number" id="ga-v1-cap" class="form-control" value="250">
-                            </div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-display font-semibold text-md text-[#4A4239]">
+                                <i class="fa-solid fa-landmark text-[#E8A552]"></i> Group A Venues & Capacities
+                            </h4>
+                            <button onclick="addDynamicVenue('ga')" class="btn btn-amber" style="padding:6px 14px; font-size:0.8rem;">
+                                + Add Venue
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 2 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="ga-v2-name" class="form-control" value="Seminar Hall 1">
-                                <input type="number" id="ga-v2-cap" class="form-control" value="150">
+                        <div id="ga-venues-container">
+                            <div class="form-group ga-venue-row flex items-center gap-2 mb-3">
+                                <input type="text" class="form-control ga-venue-name" value="Main Auditorium" placeholder="Venue Name">
+                                <input type="number" class="form-control ga-venue-cap" value="250" placeholder="Seats" style="max-width:110px;">
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 3 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="ga-v3-name" class="form-control" value="Computer Lab 1">
-                                <input type="number" id="ga-v3-cap" class="form-control" value="100">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 4 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="ga-v4-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="ga-v4-cap" class="form-control" placeholder="Capacity">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 5 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="ga-v5-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="ga-v5-cap" class="form-control" placeholder="Capacity">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 6 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="ga-v6-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="ga-v6-cap" class="form-control" placeholder="Capacity">
+                            <div class="form-group ga-venue-row flex items-center gap-2 mb-3">
+                                <input type="text" class="form-control ga-venue-name" value="Seminar Hall 1" placeholder="Venue Name">
+                                <input type="number" class="form-control ga-venue-cap" value="150" placeholder="Seats" style="max-width:110px;">
                             </div>
                         </div>
                     </div>
@@ -320,87 +279,46 @@
                     <i class="fa-solid fa-building-user text-[#7FB069]"></i> Step 4: Configure Slots & Venues for Group B
                 </div>
                 <p class="font-body text-sm text-[#8A7F73] mb-6">
-                    Define up to 6 time slots for Group B (Slots 2–6 are optional). 
+                    Add as many time slots and venues as you need for Group B. 
                     If Group B uses fewer slots than Group A, unused slot columns will be left cleanly blank in the master Excel report.
                 </p>
 
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-bottom:28px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-bottom:28px;">
                     <!-- Group B Slot Setup -->
                     <div class="card-panel dim">
-                        <h4 class="font-display font-semibold text-md text-[#4A4239] mb-4">
-                            <i class="fa-solid fa-clock text-[#7FB069]"></i> Group B Time Slots (Up to 6)
-                        </h4>
-                        <div class="form-group">
-                            <label class="form-label">Slot 1 Name (Required)</label>
-                            <input type="text" id="gb-slot-1" class="form-control" value="Slot 1 (Morning Batch)">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-display font-semibold text-md text-[#4A4239]">
+                                <i class="fa-solid fa-clock text-[#7FB069]"></i> Group B Time Slots
+                            </h4>
+                            <button onclick="addDynamicSlot('gb')" class="btn btn-raised" style="padding:6px 14px; font-size:0.8rem;">
+                                + Add Slot
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 2 Name (Optional)</label>
-                            <input type="text" id="gb-slot-2" class="form-control" placeholder="Leave blank if not needed">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 3 Name (Optional)</label>
-                            <input type="text" id="gb-slot-3" class="form-control" placeholder="Leave blank if not needed">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 4 Name (Optional)</label>
-                            <input type="text" id="gb-slot-4" class="form-control" placeholder="Leave blank if not needed">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 5 Name (Optional)</label>
-                            <input type="text" id="gb-slot-5" class="form-control" placeholder="Leave blank if not needed">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Slot 6 Name (Optional)</label>
-                            <input type="text" id="gb-slot-6" class="form-control" placeholder="Leave blank if not needed">
+                        <div id="gb-slots-container">
+                            <div class="form-group gb-slot-row flex items-center gap-2 mb-3">
+                                <input type="text" class="form-control gb-slot-input" value="Slot 1 (Morning Batch)">
+                            </div>
                         </div>
                     </div>
 
                     <!-- Group B Venue Setup -->
                     <div class="card-panel dim">
-                        <h4 class="font-display font-semibold text-md text-[#4A4239] mb-4">
-                            <i class="fa-solid fa-landmark text-[#7FB069]"></i> Group B Venues & Capacities (Up to 6)
-                        </h4>
-                        <div class="form-group">
-                            <label class="form-label">Venue 1 (Required)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="gb-v1-name" class="form-control" value="Main Auditorium">
-                                <input type="number" id="gb-v1-cap" class="form-control" value="250">
-                            </div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-display font-semibold text-md text-[#4A4239]">
+                                <i class="fa-solid fa-landmark text-[#7FB069]"></i> Group B Venues & Capacities
+                            </h4>
+                            <button onclick="addDynamicVenue('gb')" class="btn btn-sage" style="padding:6px 14px; font-size:0.8rem;">
+                                + Add Venue
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 2 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="gb-v2-name" class="form-control" value="Seminar Hall 1">
-                                <input type="number" id="gb-v2-cap" class="form-control" value="150">
+                        <div id="gb-venues-container">
+                            <div class="form-group gb-venue-row flex items-center gap-2 mb-3">
+                                <input type="text" class="form-control gb-venue-name" value="Main Auditorium" placeholder="Venue Name">
+                                <input type="number" class="form-control gb-venue-cap" value="250" placeholder="Seats" style="max-width:110px;">
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 3 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="gb-v3-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="gb-v3-cap" class="form-control" placeholder="Capacity">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 4 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="gb-v4-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="gb-v4-cap" class="form-control" placeholder="Capacity">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 5 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="gb-v5-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="gb-v5-cap" class="form-control" placeholder="Capacity">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Venue 6 (Optional)</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
-                                <input type="text" id="gb-v6-name" class="form-control" placeholder="Venue Name">
-                                <input type="number" id="gb-v6-cap" class="form-control" placeholder="Capacity">
+                            <div class="form-group gb-venue-row flex items-center gap-2 mb-3">
+                                <input type="text" class="form-control gb-venue-name" value="Seminar Hall 1" placeholder="Venue Name">
+                                <input type="number" class="form-control gb-venue-cap" value="150" placeholder="Seats" style="max-width:110px;">
                             </div>
                         </div>
                     </div>

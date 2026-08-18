@@ -283,30 +283,51 @@ async function runGroupAllocation() {
     }
 }
 
+// Dynamic Slot & Venue Builders
+function addDynamicSlot(prefix) {
+    const container = document.getElementById(`${prefix}-slots-container`);
+    if (!container) return;
+    const count = container.querySelectorAll(`.${prefix}-slot-row`).length + 1;
+    const div = document.createElement('div');
+    div.className = `form-group ${prefix}-slot-row flex items-center gap-2 mb-3`;
+    div.innerHTML = `
+        <input type="text" class="form-control ${prefix}-slot-input" placeholder="Slot ${count} Name (e.g. Afternoon Batch)">
+        <button onclick="this.parentElement.remove()" class="btn btn-raised" style="padding:6px 10px; font-size:0.75rem; color:var(--accent-rose);" title="Remove">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function addDynamicVenue(prefix) {
+    const container = document.getElementById(`${prefix}-venues-container`);
+    if (!container) return;
+    const count = container.querySelectorAll(`.${prefix}-venue-row`).length + 1;
+    const div = document.createElement('div');
+    div.className = `form-group ${prefix}-venue-row flex items-center gap-2 mb-3`;
+    div.innerHTML = `
+        <input type="text" class="form-control ${prefix}-venue-name" placeholder="Venue ${count} Name">
+        <input type="number" class="form-control ${prefix}-venue-cap" placeholder="Seats" style="max-width:110px;">
+        <button onclick="this.parentElement.remove()" class="btn btn-raised" style="padding:6px 10px; font-size:0.75rem; color:var(--accent-rose);" title="Remove">✕</button>
+    `;
+    container.appendChild(div);
+}
+
 // 3. Step 3: Group A Venue Allocation
 async function runGroupAVenueAllocation() {
     const statusEl = document.getElementById('ga-venue-status');
     statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing Branch-Mixing Solver for Group A...</span>';
 
-    // Collect Group A Slots (up to 6)
+    // Collect all dynamic slots for Group A
     const slots = [];
-    ['ga-slot-1', 'ga-slot-2', 'ga-slot-3', 'ga-slot-4', 'ga-slot-5', 'ga-slot-6'].forEach(id => {
-        const val = document.getElementById(id)?.value?.trim();
+    document.querySelectorAll('#ga-slots-container .ga-slot-input').forEach(input => {
+        const val = input.value.trim();
         if (val) slots.push({ slot_name: val, start_time: '09:30 AM', end_time: '11:30 AM' });
     });
 
-    // Collect Group A Venues (up to 6)
+    // Collect all dynamic venues for Group A
     const venues = [];
-    [
-        ['ga-v1-name', 'ga-v1-cap'],
-        ['ga-v2-name', 'ga-v2-cap'],
-        ['ga-v3-name', 'ga-v3-cap'],
-        ['ga-v4-name', 'ga-v4-cap'],
-        ['ga-v5-name', 'ga-v5-cap'],
-        ['ga-v6-name', 'ga-v6-cap']
-    ].forEach(([nId, cId]) => {
-        const name = document.getElementById(nId)?.value?.trim();
-        const cap = parseInt(document.getElementById(cId)?.value || '0');
+    document.querySelectorAll('#ga-venues-container .ga-venue-row').forEach(row => {
+        const name = row.querySelector('.ga-venue-name')?.value?.trim();
+        const cap = parseInt(row.querySelector('.ga-venue-cap')?.value || '0');
         if (name && cap > 0) venues.push({ name: name, capacity: cap });
     });
 
@@ -326,7 +347,7 @@ async function runGroupAVenueAllocation() {
             statusEl.innerHTML = `
                 <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
                     <h3 style="margin-bottom:6px;">🏛️ Group A Venue Optimization Completed!</h3>
-                    <p style="font-size:1.05rem; margin-top:4px;">Allocated <strong>${result.allocated_count}</strong> Group A students across venues with equal branch mixing.</p>
+                    <p style="font-size:1.05rem; margin-top:4px;">Allocated <strong>${result.allocated_count}</strong> Group A students across ${venues.length} venues and ${slots.length} time slots with equal branch mixing.</p>
                 </div>`;
             showToast("Group A venues allocated!", 'success');
         }
@@ -341,25 +362,18 @@ async function runGroupBVenueAllocation() {
     const statusEl = document.getElementById('gb-venue-status');
     statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing Branch-Mixing Solver for Group B...</span>';
 
-    // Collect Group B Slots (up to 6)
+    // Collect all dynamic slots for Group B
     const slots = [];
-    ['gb-slot-1', 'gb-slot-2', 'gb-slot-3', 'gb-slot-4', 'gb-slot-5', 'gb-slot-6'].forEach(id => {
-        const val = document.getElementById(id)?.value?.trim();
+    document.querySelectorAll('#gb-slots-container .gb-slot-input').forEach(input => {
+        const val = input.value.trim();
         if (val) slots.push({ slot_name: val, start_time: '09:30 AM', end_time: '11:30 AM' });
     });
 
-    // Collect Group B Venues (up to 6)
+    // Collect all dynamic venues for Group B
     const venues = [];
-    [
-        ['gb-v1-name', 'gb-v1-cap'],
-        ['gb-v2-name', 'gb-v2-cap'],
-        ['gb-v3-name', 'gb-v3-cap'],
-        ['gb-v4-name', 'gb-v4-cap'],
-        ['gb-v5-name', 'gb-v5-cap'],
-        ['gb-v6-name', 'gb-v6-cap']
-    ].forEach(([nId, cId]) => {
-        const name = document.getElementById(nId)?.value?.trim();
-        const cap = parseInt(document.getElementById(cId)?.value || '0');
+    document.querySelectorAll('#gb-venues-container .gb-venue-row').forEach(row => {
+        const name = row.querySelector('.gb-venue-name')?.value?.trim();
+        const cap = parseInt(row.querySelector('.gb-venue-cap')?.value || '0');
         if (name && cap > 0) venues.push({ name: name, capacity: cap });
     });
 
@@ -379,7 +393,7 @@ async function runGroupBVenueAllocation() {
             statusEl.innerHTML = `
                 <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
                     <h3 style="margin-bottom:6px;">🏛️ Group B Venue Optimization Completed!</h3>
-                    <p style="font-size:1.05rem; margin-top:4px;">Allocated <strong>${result.allocated_count}</strong> Group B students across venues with equal branch mixing.</p>
+                    <p style="font-size:1.05rem; margin-top:4px;">Allocated <strong>${result.allocated_count}</strong> Group B students across ${venues.length} venues and ${slots.length} time slots with equal branch mixing.</p>
                 </div>`;
             showToast("Group B venues allocated!", 'success');
         }
