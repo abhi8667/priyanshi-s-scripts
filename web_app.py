@@ -425,6 +425,36 @@ def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
     finally:
         session.close()
 
+@app.post("/api/data/reset")
+@app.delete("/api/data/reset")
+def reset_all_data():
+    session = SessionLocal()
+    try:
+        session.query(StudentEventAllocation).delete(synchronize_session=False)
+        session.query(Student).delete(synchronize_session=False)
+        session.query(ImportHistory).delete(synchronize_session=False)
+        session.query(TimeSlot).delete(synchronize_session=False)
+        session.query(Venue).delete(synchronize_session=False)
+        session.commit()
+
+        audit = AuditLog(
+            action="RESET_ALL_DATA_SUCCESS",
+            entity_type="Database",
+            details="User completely cleared all student records, allocations, and import history."
+        )
+        session.add(audit)
+        session.commit()
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "All student data, branch rosters, and allocations have been successfully deleted."
+        })
+    except Exception as e:
+        session.rollback()
+        return JSONResponse(content={"success": False, "detail": str(e)}, status_code=500)
+    finally:
+        session.close()
+
 # --- Backup & Rollback APIs ---
 class RestoreBackupRequest(BaseModel):
     backup_id: int

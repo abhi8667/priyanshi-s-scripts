@@ -449,6 +449,31 @@ async function runGroupAVenueAllocation() {
     }
 }
 
+async function clearAllStudentData() {
+    if (!confirm("Are you sure you want to delete ALL uploaded student data and clear allocations? This action will reset your database so you can start completely fresh.")) {
+        return;
+    }
+    
+    try {
+        if (typeof showToast === 'function') showToast("Clearing all student data...", "info");
+        const res = await fetch('/api/data/reset', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+            if (typeof showToast === 'function') showToast("All student data successfully cleared!", "success");
+            const mappingWrapper = document.getElementById('mapping-wrapper');
+            if (mappingWrapper) mappingWrapper.style.display = 'none';
+            const uploadStatus = document.getElementById('upload-status');
+            if (uploadStatus) uploadStatus.innerHTML = '<span style="color:var(--accent-sage);">Database cleared successfully. Ready for fresh import.</span>';
+            loadDashboard();
+        } else {
+            alert(data.detail || "Failed to clear student data.");
+        }
+    } catch (err) {
+        alert("Error connecting to server: " + err.message);
+    }
+}
+
 // 4. Step 4: Group B Venue Allocation
 async function runGroupBVenueAllocation() {
     const statusEl = document.getElementById('gb-venue-status');

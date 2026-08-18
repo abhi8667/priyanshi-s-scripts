@@ -90,8 +90,15 @@
             </div>
         </div>
 
-        <!-- 0. Dashboard View -->
-        <section id="dashboard" class="tab-pane active">
+        <!-- DASHBOARD VIEW -->
+        <section id="dashboard" class="tab-pane active font-body">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-display font-semibold text-lg text-[#4A4239]">Overview & Cumulative Roster</h3>
+                <button onclick="clearAllStudentData()" class="btn btn-raised" style="color:var(--accent-rose); border-color:#E5A9A9; padding:6px 14px; font-size:0.8rem;" title="Delete All Excel Student Data">
+                    <i class="fa-solid fa-trash-can"></i> Clear All Excel Data
+                </button>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-card raised">
                     <div class="flex items-center justify-between">
@@ -139,8 +146,9 @@
                     <div id="group-dist-list"></div>
                 </div>
                 <div class="card-panel raised">
-                    <div class="card-title">
-                        <i class="fa-solid fa-graduation-cap text-[#7FB069]"></i> Branch-Wise Cumulative Roster
+                    <div class="card-title flex items-center justify-between">
+                        <span><i class="fa-solid fa-graduation-cap text-[#7FB069]"></i> Branch-Wise Cumulative Roster</span>
+                        <button onclick="clearAllStudentData()" class="btn btn-raised" style="color:var(--accent-rose); padding:4px 10px; font-size:0.75rem;">Clear Data</button>
                     </div>
                     <div id="dept-dist-list"></div>
                 </div>
@@ -168,8 +176,13 @@
         <!-- STEP 1: Import View -->
         <section id="import" class="tab-pane">
             <div class="card-panel raised">
-                <div class="card-title">
-                    <i class="fa-solid fa-file-arrow-up text-[#E8A552]"></i> Step 1: Ingest Candidate Excel Sheet
+                <div class="flex items-center justify-between mb-4">
+                    <div class="card-title mb-0">
+                        <i class="fa-solid fa-file-arrow-up text-[#E8A552]"></i> Step 1: Ingest Candidate Excel Sheet
+                    </div>
+                    <button onclick="clearAllStudentData()" class="btn btn-raised" style="color:var(--accent-rose); border-color:#E5A9A9; padding:6px 14px; font-size:0.8rem;">
+                        <i class="fa-solid fa-trash-can"></i> Clear All Student Data
+                    </button>
                 </div>
                 <div class="drop-zone recessed" id="file-drop-zone">
                     <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none">
