@@ -67,9 +67,9 @@ class DataImporter:
             duplicate_usn_count = 0
             warnings = []
 
-            # Pre-load existing students map
+            # Pre-load all existing students (including soft-deleted) to prevent PostgreSQL USN unique constraint violations
             existing_students_map = {
-                s.usn.strip().upper(): s for s in session.query(Student).filter(Student.is_deleted == False).all()
+                s.usn.strip().upper(): s for s in session.query(Student).all()
             }
             existing_names_list = [(s.full_name, s.usn) for s in existing_students_map.values()]
 
@@ -86,6 +86,8 @@ class DataImporter:
             session.add(imp_record)
             session.flush()
 
+            ts_tag = int(datetime.utcnow().timestamp()) % 10000
+
             for idx, row in df_renamed.iterrows():
                 row_num = idx + 2  # Excel 1-based header offset
                 raw_usn = str(row.get('usn', '')).strip() if pd.notna(row.get('usn')) else ""
@@ -96,9 +98,9 @@ class DataImporter:
                 raw_stu_id = str(row.get('student_id', '')).strip() if pd.notna(row.get('student_id')) else None
                 raw_stu_num = str(row.get('student_number', '')).strip() if pd.notna(row.get('student_number')) else None
 
-                # Automatic fallbacks so NO columns are mandatory
+                # Automatic unique fallbacks so NO columns are mandatory
                 if not raw_usn or raw_usn.lower() in ['nan', 'none', 'null']:
-                    raw_usn = f"STU_{(idx+1):04d}"
+                    raw_usn = f"STU_{ts_tag}_{(idx+1):04d}"
 
                 if not raw_name or raw_name.lower() in ['nan', 'none', 'null']:
                     raw_name = raw_usn
@@ -115,17 +117,16 @@ class DataImporter:
                 # Check if USN exists in DB
                 if clean_usn_key in existing_students_map:
                     stu = existing_students_map[clean_usn_key]
+                    stu.is_deleted = False
                     if stu.import_history_id is None:
                         stu.import_history_id = imp_record.id
                     
-                    # Update fields if faculty corrected typo, preserving allocation!
+                    # Update fields
                     changed = False
                     if stu.full_name != raw_name:
-                        warnings.append(f"USN {raw_usn}: Updated name from '{stu.full_name}' to '{raw_name}'.")
                         stu.full_name = raw_name
                         changed = True
                     if stu.department_id != dept_obj.id:
-                        warnings.append(f"USN {raw_usn}: Updated department to '{dept_obj.name}'. Existing allocations preserved.")
                         stu.department_id = dept_obj.id
                         changed = True
                     if stu.gender != gender_enum.value:
@@ -135,7 +136,6 @@ class DataImporter:
                     # Reactivate if inactive
                     if stu.status == StudentStatus.INACTIVE.value:
                         stu.status = StudentStatus.ACTIVE.value
-                        warnings.append(f"USN {raw_usn}: Reactivated student status to Active.")
                         changed = True
 
                     if changed:
