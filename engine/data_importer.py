@@ -56,11 +56,6 @@ class DataImporter:
             # Map columns in DataFrame
             df_renamed = df.rename(columns=column_mapping)
             
-            # Verify required columns exist
-            for req in ['usn', 'full_name']:
-                if req not in df_renamed.columns:
-                    raise ValidationError(f"Required field '{req}' is missing in column mapping.")
-
             if 'department' not in df_renamed.columns:
                 if 'program' in df_renamed.columns:
                     df_renamed['department'] = df_renamed['program']
@@ -93,22 +88,22 @@ class DataImporter:
 
             for idx, row in df_renamed.iterrows():
                 row_num = idx + 2  # Excel 1-based header offset
-                raw_usn = str(row['usn']).strip() if pd.notna(row['usn']) else ""
-                raw_name = str(row['full_name']).strip() if pd.notna(row['full_name']) else ""
-                raw_dept = str(row['department']).strip() if pd.notna(row['department']) else ""
+                raw_usn = str(row.get('usn', '')).strip() if pd.notna(row.get('usn')) else ""
+                raw_name = str(row.get('full_name', '')).strip() if pd.notna(row.get('full_name')) else ""
+                raw_dept = str(row.get('department', '')).strip() if pd.notna(row.get('department')) else ""
                 raw_prog = str(row.get('program', 'B.Tech')).strip() if pd.notna(row.get('program')) else "B.Tech"
                 raw_gender = str(row.get('gender', 'Unknown')) if pd.notna(row.get('gender')) else "Unknown"
                 raw_stu_id = str(row.get('student_id', '')).strip() if pd.notna(row.get('student_id')) else None
                 raw_stu_num = str(row.get('student_number', '')).strip() if pd.notna(row.get('student_number')) else None
 
+                # Automatic fallbacks so NO columns are mandatory
                 if not raw_usn or raw_usn.lower() in ['nan', 'none', 'null']:
-                    warnings.append(f"Row {row_num}: Skipped record due to blank USN.")
-                    continue
+                    raw_usn = f"STU_{(idx+1):04d}"
+
                 if not raw_name or raw_name.lower() in ['nan', 'none', 'null']:
-                    warnings.append(f"Row {row_num} (USN: {raw_usn}): Skipped record due to blank name.")
-                    continue
+                    raw_name = raw_usn
+
                 if not raw_dept or raw_dept.lower() in ['nan', 'none', 'null']:
-                    warnings.append(f"Row {row_num} (USN: {raw_usn}): Missing department, assigned 'General'.")
                     raw_dept = "General"
 
                 clean_usn_key = raw_usn.upper()

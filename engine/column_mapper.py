@@ -7,12 +7,12 @@ from config import FUZZY_MATCH_THRESHOLD
 INTERNAL_FIELDS = {
     "usn": {
         "label": "USN / Registration No",
-        "required": True,
+        "required": False,
         "aliases": ["usn", "usn number", "reg no", "registration number", "roll no", "roll number", "univ usn", "student usn"]
     },
     "full_name": {
         "label": "Student Full Name",
-        "required": True,
+        "required": False,
         "aliases": ["student full name", "full name", "student name", "candidate name", "name", "name of student", "first name", "student number", "student_name", "student_number"]
     },
     "student_id": {

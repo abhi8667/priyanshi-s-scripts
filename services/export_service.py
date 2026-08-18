@@ -49,7 +49,7 @@ class ExportService:
             header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
             header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
 
-            columns = ["USN", "Student ID", "Full Name", "Gender", "Department", "Program", "Group", "Venue", "Time Slot", "Status"]
+            columns = ["USN", "Full Name", "Gender", "Department", "Group", "Venue", "Time Slot"]
 
             title = f"{group_name} Allocations" if group_name else "Master Allocation"
             ws = wb.create_sheet(title=title[:31])
@@ -64,15 +64,12 @@ class ExportService:
             for s in students:
                 row = [
                     cls.sanitize_cell(s.usn),
-                    cls.sanitize_cell(s.student_id or ""),
                     cls.sanitize_cell(s.full_name),
                     cls.sanitize_cell(s.gender),
                     cls.sanitize_cell(s.department.name if s.department else ""),
-                    cls.sanitize_cell(s.program.name if s.program else ""),
                     cls.sanitize_cell(s.group_name or ""),
                     cls.sanitize_cell(s.venue.name if s.venue else ""),
-                    cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else ""),
-                    cls.sanitize_cell(s.status)
+                    cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else "")
                 ]
                 ws.append(row)
 
@@ -91,15 +88,12 @@ class ExportService:
                     for s in grp_students:
                         ws_grp.append([
                             cls.sanitize_cell(s.usn),
-                            cls.sanitize_cell(s.student_id or ""),
                             cls.sanitize_cell(s.full_name),
                             cls.sanitize_cell(s.gender),
                             cls.sanitize_cell(s.department.name if s.department else ""),
-                            cls.sanitize_cell(s.program.name if s.program else ""),
                             cls.sanitize_cell(s.group_name or ""),
                             cls.sanitize_cell(s.venue.name if s.venue else ""),
-                            cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else ""),
-                            cls.sanitize_cell(s.status)
+                            cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else "")
                         ])
 
             # Auto-fit columns
