@@ -326,21 +326,36 @@ class VenueAllocationRequest(BaseModel):
 def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
     session = SessionLocal()
     try:
+        grp = req.target_group if req and req.target_group and req.target_group != "All" else None
+
+        # 1. Nullify foreign key references on target students first to prevent FK constraint failures
+        filter_query = session.query(Student).filter(Student.is_deleted == False)
+        if grp:
+            filter_query = filter_query.filter(Student.group_name == grp)
+        filter_query.update({Student.venue_id: None, Student.time_slot_id: None}, synchronize_session=False)
+        session.commit()
+
         if req:
-            # Inline creation of time slots if specified
+            # Strictly deactivate/clear previous venues & slots so allocation is 100% scoped to user inputs
             if req.slots and len(req.slots) > 0:
+                # Nullify time_slot_id for ALL students before clearing time_slots table
+                session.query(Student).update({Student.time_slot_id: None}, synchronize_session=False)
+                session.query(TimeSlot).delete(synchronize_session=False)
+                session.commit()
+
                 for idx, s in enumerate(req.slots, 1):
                     Repository.get_or_create_time_slot(session, s.slot_name, s.start_time, s.end_time, day_number=idx)
             
-            # Inline creation of venues if specified
             if req.venues and len(req.venues) > 0:
+                session.query(Venue).update({Venue.is_active: False}, synchronize_session=False)
                 for v in req.venues:
-                    Repository.get_or_create_venue(session, v.name, v.capacity)
-            
+                    v_obj = Repository.get_or_create_venue(session, v.name, v.capacity)
+                    v_obj.is_active = True
+                    v_obj.capacity = v.capacity
+
             session.commit()
 
-        grp = req.target_group if req and req.target_group and req.target_group != "All" else None
-        res = VenueOptimizer.optimize_allocations(target_group=grp)
+        res = VenueOptimizer.optimize_allocations(target_group=grp, auto_backup=False)
         return JSONResponse(content={
             "success": True,
             "allocated_count": res.newly_allocated_venues,
