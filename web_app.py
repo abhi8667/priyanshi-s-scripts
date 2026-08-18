@@ -150,6 +150,7 @@ async def upload_import_file(file: UploadFile = File(...)):
 class CommitImportRequest(BaseModel):
     cache_id: str
     mappings: Dict[str, str]
+    replace_existing: bool = True
 
 @app.post("/api/import/commit")
 def commit_import(req: CommitImportRequest):
@@ -159,7 +160,13 @@ def commit_import(req: CommitImportRequest):
     data = temp_import_cache[req.cache_id]
     file_path = Path(data["file_path"])
 
+    session = SessionLocal()
     try:
+        if req.replace_existing:
+            # Clear previous sample/imported student records so the database reflects ONLY the newly uploaded dataset
+            session.query(Student).update({Student.is_deleted: True}, synchronize_session=False)
+            session.commit()
+
         res = DataImporter.import_excel(file_path, req.mappings)
         return JSONResponse(content={
             "success": True,
@@ -175,18 +182,25 @@ def commit_import(req: CommitImportRequest):
             "warnings": [],
             "imported_count": 0
         })
+    finally:
+        session.close()
 
 # --- Group Allocation API ---
 @app.post("/api/group/allocate")
 def run_group_allocation():
+    session = SessionLocal()
     try:
-        res = GroupAllocator.allocate_groups()
-        session = SessionLocal()
-        try:
-            group_a = session.query(Student).filter(Student.group_name == "Group A", Student.is_deleted == False).count()
-            group_b = session.query(Student).filter(Student.group_name == "Group B", Student.is_deleted == False).count()
-        finally:
-            session.close()
+        # Reset existing group and venue assignments for active students so the newly uploaded file gets freshly stratified
+        session.query(Student).filter(Student.is_deleted == False).update(
+            {Student.group_name: None, Student.venue_id: None, Student.time_slot_id: None},
+            synchronize_session=False
+        )
+        session.commit()
+
+        res = GroupAllocator.allocate_groups(auto_backup=False)
+
+        group_a = session.query(Student).filter(Student.group_name == "Group A", Student.is_deleted == False).count()
+        group_b = session.query(Student).filter(Student.group_name == "Group B", Student.is_deleted == False).count()
 
         return JSONResponse(content={
             "success": True,
@@ -199,6 +213,8 @@ def run_group_allocation():
         })
     except Exception as e:
         return JSONResponse(content={"success": False, "detail": str(e)}, status_code=500)
+    finally:
+        session.close()
 
 # --- Venue & TimeSlot Management APIs ---
 @app.get("/api/venues")
