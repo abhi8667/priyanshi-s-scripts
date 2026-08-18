@@ -28,12 +28,13 @@ def test_column_mapper_missing_required():
 
 def test_idempotent_department_get_or_create():
     from database.connection import init_db, SessionLocal
-    from database.models import Department, Student
+    from database.models import Department, Student, StudentEventAllocation
     from database.repository import Repository
 
     init_db()
     session = SessionLocal()
     try:
+        session.query(StudentEventAllocation).delete()
         session.query(Student).delete()
         session.query(Department).delete()
         session.commit()
@@ -56,12 +57,13 @@ def test_idempotent_department_get_or_create():
 
 def test_delete_import_history_removes_students():
     from database.connection import init_db, SessionLocal
-    from database.models import Student, ImportHistory
+    from database.models import Student, ImportHistory, StudentEventAllocation
     from database.repository import Repository
 
     init_db()
     session = SessionLocal()
     try:
+        session.query(StudentEventAllocation).delete()
         session.query(Student).delete()
         session.query(ImportHistory).delete()
         session.commit()

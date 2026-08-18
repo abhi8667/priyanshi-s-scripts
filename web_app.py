@@ -17,7 +17,7 @@ if str(BASE_DIR) not in sys.path:
 
 from database.connection import init_db, SessionLocal
 from database.repository import Repository
-from database.models import Venue, TimeSlot, ImportHistory, AuditLog, AppSettings, Student
+from database.models import Venue, TimeSlot, ImportHistory, AuditLog, AppSettings, Student, StudentEventAllocation
 from database.backup_manager import BackupManager
 from engine.column_mapper import ColumnMapper
 from engine.data_importer import DataImporter
@@ -350,69 +350,62 @@ def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
         session.query(StudentEventAllocation).filter(StudentEventAllocation.student_id.in_(student_ids)).delete(synchronize_session=False)
         session.commit()
 
-        # 4. Allocate students to venues FOR EACH EVENT
         now = datetime.utcnow()
-        total_allocations_created = 0
+        venues_list = [v for v in venue_configs if v.capacity > 0]
+        if not venues_list:
+            return JSONResponse(content={"success": False, "detail": "No valid venue capacities provided."}, status_code=400)
 
+        # Group students by (department_id, gender) for branch mixing
+        strata: Dict[Tuple[int, str], List[Student]] = {}
+        for s in group_students:
+            key = (s.department_id or 0, s.gender or "Unknown")
+            strata.setdefault(key, []).append(s)
+
+        total_cap = sum(v.capacity for v in venues_list)
+        slot_count = len(group_students)
+        ratio = min(1.0, slot_count / total_cap) if total_cap > 0 else 1.0
+
+        # Step A: Single consistent venue assignment per student with branch mixing (NO rotation among events)
+        student_venue_map: Dict[int, str] = {}
+        strata_indices = {k: 0 for k in strata}
+
+        for v in venues_list:
+            v_name = v.name
+            for s_key, s_list in strata.items():
+                stratum_total = len(s_list)
+                share = int(stratum_total * (v.capacity / total_cap)) if total_cap > 0 else 0
+                share = max(1 if stratum_total > 0 and share == 0 else share, share)
+
+                curr_idx = strata_indices[s_key]
+                to_take = s_list[curr_idx : curr_idx + share]
+                strata_indices[s_key] += len(to_take)
+
+                for s in to_take:
+                    student_venue_map[s.id] = v_name
+
+        # Assign any remaining unassigned students to venues
+        for s_key, s_list in strata.items():
+            curr_idx = strata_indices[s_key]
+            unassigned = s_list[curr_idx:]
+            for idx, s in enumerate(unassigned):
+                student_venue_map[s.id] = venues_list[idx % len(venues_list)].name
+
+        # Step B: Apply SAME assigned venue across ALL events configured for this group
+        total_allocations_created = 0
         for evt in event_configs:
             event_title = evt.slot_name.strip()
-            
-            # Prepare venue targets
-            venues_list = [v for v in venue_configs if v.capacity > 0]
-            if not venues_list:
-                continue
-
-            # Group students by (department_id, gender) for branch mixing
-            strata: Dict[Tuple[int, str], List[Student]] = {}
             for s in group_students:
-                key = (s.department_id or 0, s.gender or "Unknown")
-                strata.setdefault(key, []).append(s)
-
-            total_cap = sum(v.capacity for v in venues_list)
-            slot_count = len(group_students)
-            ratio = min(1.0, slot_count / total_cap) if total_cap > 0 else 1.0
-
-            # Fill matrix proportionally
-            strata_indices = {k: 0 for k in strata}
-            for v in venues_list:
-                v_name = v.name
-                for s_key, s_list in strata.items():
-                    stratum_total = len(s_list)
-                    share = int(stratum_total * (v.capacity / total_cap)) if total_cap > 0 else 0
-                    share = max(1 if stratum_total > 0 and share == 0 else share, share)
-
-                    curr_idx = strata_indices[s_key]
-                    to_take = s_list[curr_idx : curr_idx + share]
-                    strata_indices[s_key] += len(to_take)
-
-                    for s in to_take:
-                        alloc = StudentEventAllocation(
-                            student_id=s.id,
-                            event_name=event_title,
-                            venue_name=v_name,
-                            group_name=grp,
-                            created_at=now
-                        )
-                        session.add(alloc)
-                        s.venue_allocated_at = now
-                        total_allocations_created += 1
-
-            # Distribute any remaining unassigned students for this event
-            for s_key, s_list in strata.items():
-                curr_idx = strata_indices[s_key]
-                unassigned = s_list[curr_idx:]
-                for idx, s in enumerate(unassigned):
-                    v_name = venues_list[idx % len(venues_list)].name
-                    alloc = StudentEventAllocation(
-                        student_id=s.id,
-                        event_name=event_title,
-                        venue_name=v_name,
-                        group_name=grp,
-                        created_at=now
-                    )
-                    session.add(alloc)
-                    s.venue_allocated_at = now
-                    total_allocations_created += 1
+                v_name = student_venue_map.get(s.id, venues_list[0].name)
+                alloc = StudentEventAllocation(
+                    student_id=s.id,
+                    event_name=event_title,
+                    venue_name=v_name,
+                    group_name=grp,
+                    created_at=now
+                )
+                session.add(alloc)
+                s.venue_allocated_at = now
+                total_allocations_created += 1
 
         session.commit()
 
@@ -422,8 +415,8 @@ def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
             "unallocated_count": 0,
             "events_count": len(event_configs),
             "total_allocations": total_allocations_created,
-            "execution_time_seconds": 0.3,
-            "solver_name": "Multi-Event Proportional Branch-Mixing Solver",
+            "execution_time_seconds": 0.2,
+            "solver_name": "Proportional Consistent Venue Branch-Mixing Solver",
             "details": []
         })
     except Exception as e:

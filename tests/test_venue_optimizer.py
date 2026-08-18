@@ -1,6 +1,6 @@
 import pytest
 from database.connection import init_db, SessionLocal
-from database.models import Student, Department, Venue, TimeSlot
+from database.models import Student, Department, Venue, TimeSlot, StudentEventAllocation
 from engine.venue_optimizer import VenueOptimizer
 from core.exceptions import CapacityExceededError
 
@@ -8,6 +8,7 @@ from core.exceptions import CapacityExceededError
 def setup_db():
     init_db()
     session = SessionLocal()
+    session.query(StudentEventAllocation).delete()
     session.query(Student).delete()
     session.query(Department).delete()
     session.query(Venue).delete()

@@ -88,7 +88,7 @@ class StudentEventAllocation(Base):
     __tablename__ = "student_event_allocations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    student_id: Mapped[int] = mapped_column(ForeignKey("students.id"), nullable=False, index=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
     event_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     venue_name: Mapped[str] = mapped_column(String(100), nullable=False)
     group_name: Mapped[str] = mapped_column(String(50), nullable=False, index=True)

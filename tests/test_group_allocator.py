@@ -1,12 +1,13 @@
 import pytest
 from database.connection import init_db, SessionLocal
-from database.models import Student, Department
+from database.models import Student, Department, StudentEventAllocation
 from engine.group_allocator import GroupAllocator
 
 @pytest.fixture(autouse=True)
 def setup_db():
     init_db()
     session = SessionLocal()
+    session.query(StudentEventAllocation).delete()
     session.query(Student).delete()
     session.query(Department).delete()
     session.commit()
