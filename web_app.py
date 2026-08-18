@@ -122,17 +122,17 @@ async def upload_import_file(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(contents)
     
-    # Analyze headers using ColumnMapper
-    importer = DataImporter()
-    raw_headers = importer.extract_headers(str(file_path))
-    mappings, unmapped, missing_required = ColumnMapper.map_columns(raw_headers)
+    # Analyze headers using DataImporter.inspect_file
+    mapping, unmapped, missing_required, total_rows = DataImporter.inspect_file(file_path)
+
+    raw_headers = list(mapping.keys()) + unmapped
 
     cache_id = file_path.name
     temp_import_cache[cache_id] = {
         "file_path": str(file_path),
         "file_name": file.filename,
         "raw_headers": raw_headers,
-        "mappings": mappings
+        "mappings": mapping
     }
 
     from engine.column_mapper import INTERNAL_FIELDS
@@ -142,7 +142,7 @@ async def upload_import_file(file: UploadFile = File(...)):
         "cache_id": cache_id,
         "file_name": file.filename,
         "raw_headers": raw_headers,
-        "suggested_mappings": mappings,
+        "suggested_mappings": mapping,
         "missing_required": missing_required,
         "canonical_fields": canonical_fields
     })
@@ -157,34 +157,24 @@ def commit_import(req: CommitImportRequest):
         raise HTTPException(status_code=404, detail="Import session expired or invalid cache ID.")
     
     data = temp_import_cache[req.cache_id]
-    file_path = data["file_path"]
-    file_name = data["file_name"]
+    file_path = Path(data["file_path"])
 
-    # Parse and validate with custom header mappings
-    importer = DataImporter()
-    records, errors, warnings = importer.process_file(file_path, req.mappings)
-
-    if errors:
-        return JSONResponse(content={
-            "success": False,
-            "errors": errors,
-            "warnings": warnings,
-            "imported_count": 0
-        })
-
-    # Save to Database
-    session = SessionLocal()
     try:
-        imported_count, new_count, updated_count = importer.save_records_to_db(session, records, file_name)
+        res = DataImporter.import_excel(file_path, req.mappings)
         return JSONResponse(content={
             "success": True,
-            "imported_count": imported_count,
-            "new_count": new_count,
-            "updated_count": updated_count,
-            "warnings": warnings
+            "imported_count": res.get("imported_count", 0),
+            "new_count": res.get("new_records", 0),
+            "updated_count": res.get("updated_records", 0),
+            "warnings": res.get("warnings", [])
         })
-    finally:
-        session.close()
+    except Exception as e:
+        return JSONResponse(content={
+            "success": False,
+            "errors": [str(e)],
+            "warnings": [],
+            "imported_count": 0
+        })
 
 # --- Group Allocation API ---
 @app.post("/api/group/allocate")
