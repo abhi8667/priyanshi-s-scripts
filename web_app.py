@@ -150,7 +150,6 @@ async def upload_import_file(file: UploadFile = File(...)):
 class CommitImportRequest(BaseModel):
     cache_id: str
     mappings: Dict[str, str]
-    replace_existing: bool = True
 
 @app.post("/api/import/commit")
 def commit_import(req: CommitImportRequest):
@@ -162,10 +161,9 @@ def commit_import(req: CommitImportRequest):
 
     session = SessionLocal()
     try:
-        if req.replace_existing:
-            # Clear previous sample/imported student records so the database reflects ONLY the newly uploaded dataset
-            session.query(Student).update({Student.is_deleted: True}, synchronize_session=False)
-            session.commit()
+        # Strictly isolate session: wipe all previous student records so the database reflects ONLY the newly uploaded dataset
+        session.query(Student).delete()
+        session.commit()
 
         res = DataImporter.import_excel(file_path, req.mappings)
         return JSONResponse(content={
