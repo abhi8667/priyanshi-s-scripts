@@ -231,14 +231,21 @@ class VenueOptimizer:
 
             student_pool_idx = 0
 
-            # Process Slot by Slot
-            for t_slot in time_slots:
+            import math
+
+            num_slots = len(time_slots)
+            # Process Slot by Slot, balancing student load across all configured time slots
+            for slot_idx, t_slot in enumerate(time_slots):
                 if student_pool_idx >= total_unallocated:
                     break
 
                 slot_capacity = sum(v.capacity for v in venues)
                 remaining_students = total_unallocated - student_pool_idx
-                slot_student_count = min(remaining_students, slot_capacity)
+                num_remaining_slots = num_slots - slot_idx
+
+                # Balance load across all configured time slots
+                target_for_slot = math.ceil(remaining_students / num_remaining_slots) if num_remaining_slots > 0 else remaining_students
+                slot_student_count = min(remaining_students, slot_capacity, target_for_slot)
 
                 # Slice pool of students for this time slot
                 slot_students = unallocated_students[student_pool_idx : student_pool_idx + slot_student_count]
