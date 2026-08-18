@@ -1,8 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
+    initClock();
     loadDashboard();
     setupEventListeners();
 });
+
+function initClock() {
+    const clockEl = document.getElementById('live-clock');
+    if (!clockEl) return;
+    const update = () => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+        clockEl.innerText = `${timeStr} · ${dateStr} · Stratified Optimization`;
+    };
+    update();
+    setInterval(update, 10000);
+}
 
 // Toast Manager
 function showToast(message, type = 'info') {
@@ -10,7 +24,7 @@ function showToast(message, type = 'info') {
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚡';
+    const icon = type === 'success' ? '✨' : type === 'error' ? '❌' : '⚡';
     toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
@@ -23,17 +37,17 @@ function showToast(message, type = 'info') {
 
 // Global Tab Switcher Function
 function switchTab(tabId) {
-    const navBtns = document.querySelectorAll('.nav-btn');
+    const modePills = document.querySelectorAll('.mode-pill');
     const tabPanes = document.querySelectorAll('.tab-pane');
     const stepItems = document.querySelectorAll('.step-item');
 
-    navBtns.forEach(b => b.classList.remove('active'));
+    modePills.forEach(b => b.classList.remove('active'));
     tabPanes.forEach(pane => pane.classList.remove('active'));
     stepItems.forEach(item => item.classList.remove('active'));
 
-    // Highlight target nav button
-    const targetNavBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
-    if (targetNavBtn) targetNavBtn.classList.add('active');
+    // Highlight target mode pill
+    const targetModePill = document.querySelector(`.mode-pill[data-tab="${tabId}"]`);
+    if (targetModePill) targetModePill.classList.add('active');
 
     // Highlight target step item
     const targetStepItem = document.querySelector(`.step-item[data-tab="${tabId}"]`);
@@ -46,18 +60,16 @@ function switchTab(tabId) {
 
         if (tabId === 'dashboard') loadDashboard();
         if (tabId === 'students') loadStudents();
-        if (tabId === 'venues') loadVenues();
         if (tabId === 'backups') loadBackups();
-        if (tabId === 'logs') loadLogs();
     }
 }
 
 // Navigation Controller
 function initNavigation() {
-    const navBtns = document.querySelectorAll('.nav-btn');
+    const modePills = document.querySelectorAll('.mode-pill');
     const stepItems = document.querySelectorAll('.step-item');
 
-    navBtns.forEach(btn => {
+    modePills.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.getAttribute('data-tab');
             switchTab(targetTab);
