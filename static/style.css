@@ -539,3 +539,73 @@ tr:hover td {
         bottom: 80px;
     }
 }
+
+/* Wizard Stepper Bar */
+.wizard-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 28px;
+    padding: 16px 24px;
+}
+.wizard-stepper::-webkit-scrollbar { display: none; }
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    opacity: 0.55;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.step-item.active {
+    opacity: 1;
+    background: rgba(99, 102, 241, 0.18);
+    border: 1px solid var(--border-active);
+}
+
+.step-item.completed {
+    opacity: 0.9;
+}
+.step-item.completed .step-num {
+    background: var(--accent-emerald);
+    color: #FFF;
+}
+
+.step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.step-item.active .step-num {
+    background: var(--primary-gradient);
+    color: #FFF;
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.step-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.step-divider {
+    flex: 1;
+    height: 2px;
+    background: var(--border-subtle);
+    min-width: 20px;
+    margin: 0 6px;
+}

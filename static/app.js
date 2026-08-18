@@ -21,35 +21,58 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
+// Global Tab Switcher Function
+function switchTab(tabId) {
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    const stepItems = document.querySelectorAll('.step-item');
+
+    navBtns.forEach(b => b.classList.remove('active'));
+    tabPanes.forEach(pane => pane.classList.remove('active'));
+    stepItems.forEach(item => item.classList.remove('active'));
+
+    // Highlight target nav button
+    const targetNavBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+    if (targetNavBtn) targetNavBtn.classList.add('active');
+
+    // Highlight target step item
+    const targetStepItem = document.querySelector(`.step-item[data-tab="${tabId}"]`);
+    if (targetStepItem) targetStepItem.classList.add('active');
+
+    const targetPane = document.getElementById(tabId);
+    if (targetPane) {
+        targetPane.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (tabId === 'dashboard') loadDashboard();
+        if (tabId === 'students') loadStudents();
+        if (tabId === 'venues') loadVenues();
+        if (tabId === 'backups') loadBackups();
+        if (tabId === 'logs') loadLogs();
+    }
+}
+
 // Navigation Controller
 function initNavigation() {
     const navBtns = document.querySelectorAll('.nav-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
+    const stepItems = document.querySelectorAll('.step-item');
 
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.getAttribute('data-tab');
+            switchTab(targetTab);
+        });
+    });
 
-            navBtns.forEach(b => b.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-
-            btn.classList.add('active');
-            const targetPane = document.getElementById(targetTab);
-            if (targetPane) {
-                targetPane.classList.add('active');
-                
-                // Auto load data based on active tab
-                if (targetTab === 'dashboard') loadDashboard();
-                if (targetTab === 'students') loadStudents();
-                if (targetTab === 'venues') loadVenues();
-                if (targetTab === 'backups') loadBackups();
-                if (targetTab === 'logs') loadLogs();
-            }
+    stepItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const targetTab = item.getAttribute('data-tab');
+            switchTab(targetTab);
         });
     });
 }
 
-// 1. Dashboard View
+// 0. Dashboard View
 async function loadDashboard() {
     try {
         const res = await fetch('/api/dashboard');
@@ -95,7 +118,7 @@ async function loadDashboard() {
     }
 }
 
-// 2. Import Excel View
+// 1. Import View
 let currentImportCacheId = null;
 
 function setupEventListeners() {
@@ -113,8 +136,11 @@ function setupEventListeners() {
     const runGroupBtn = document.getElementById('run-group-btn');
     if (runGroupBtn) runGroupBtn.addEventListener('click', runGroupAllocation);
 
-    const runVenueBtn = document.getElementById('run-venue-btn');
-    if (runVenueBtn) runVenueBtn.addEventListener('click', runVenueAllocation);
+    const runGABtn = document.getElementById('run-ga-venue-btn');
+    if (runGABtn) runGABtn.addEventListener('click', runGroupAVenueAllocation);
+
+    const runGBBtn = document.getElementById('run-gb-venue-btn');
+    if (runGBBtn) runGBBtn.addEventListener('click', runGroupBVenueAllocation);
 
     const addVenueForm = document.getElementById('add-venue-form');
     if (addVenueForm) addVenueForm.addEventListener('submit', addVenue);
@@ -150,7 +176,7 @@ async function handleFileUpload(e) {
         }
 
         currentImportCacheId = data.cache_id;
-        statusEl.innerHTML = `<span style="color:var(--accent-emerald)">✨ File uploaded: <strong>${data.file_name}</strong></span>`;
+        statusEl.innerHTML = `<span style="color:var(--accent-emerald)">✨ File analyzed: <strong>${data.file_name}</strong></span>`;
         showToast(`Analyzed ${data.file_name} successfully`, 'success');
 
         renderHeaderMapper(data.raw_headers, data.suggested_mappings, data.canonical_fields);
@@ -207,20 +233,137 @@ async function commitImport() {
     if (result.success) {
         commitMsg.innerHTML = `
             <div style="padding:14px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:10px; color:var(--accent-emerald); font-weight:600;">
-                ✅ Import Complete! Total: ${result.imported_count} | New: ${result.new_count} | Updated: ${result.updated_count}
+                ✅ Import Complete! Total: ${result.imported_count} Records | New: ${result.new_count} | Updated: ${result.updated_count}
             </div>`;
-        showToast(`Successfully imported ${result.imported_count} records`, 'success');
+        showToast(`Imported ${result.imported_count} records`, 'success');
         loadDashboard();
+        setTimeout(() => switchTab('groups'), 1200);
     } else {
         commitMsg.innerHTML = `
             <div style="padding:14px; background:rgba(244, 63, 94, 0.15); border:1px solid rgba(244,63,94,0.3); border-radius:10px; color:var(--accent-rose); font-weight:600;">
                 ❌ ${result.errors.join('<br>')}
             </div>`;
-        showToast("Import failed with validation errors", 'error');
+        showToast("Import validation failed", 'error');
     }
 }
 
-// 3. Student Database View
+// 2. Step 2: Group Allocation
+async function runGroupAllocation() {
+    const statusEl = document.getElementById('group-alloc-status');
+    statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">⚡ Computing SHA-256 Stratified Split...</span>';
+
+    try {
+        const res = await fetch('/api/group/allocate', { method: 'POST' });
+        const result = await res.json();
+
+        if (result.success) {
+            statusEl.innerHTML = `
+                <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
+                    <h3 style="margin-bottom:6px;">🎉 Group Stratification Completed!</h3>
+                    <p style="font-size:1.05rem; margin-top:4px;">Group A: <strong>${result.group_a_count}</strong> | Group B: <strong>${result.group_b_count}</strong></p>
+                </div>`;
+            showToast("Group A and Group B created!", 'success');
+            loadDashboard();
+        }
+    } catch (err) {
+        statusEl.innerHTML = `<span style="color:var(--accent-rose)">Allocation failed.</span>`;
+        showToast("Allocation failed", 'error');
+    }
+}
+
+// 3. Step 3: Group A Venue Allocation
+async function runGroupAVenueAllocation() {
+    const statusEl = document.getElementById('ga-venue-status');
+    statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing Branch-Mixing Solver for Group A...</span>';
+
+    // Collect Group A Slots
+    const slots = [];
+    ['ga-slot-1', 'ga-slot-2', 'ga-slot-3'].forEach(id => {
+        const val = document.getElementById(id)?.value?.trim();
+        if (val) slots.push({ slot_name: val, start_time: '09:30 AM', end_time: '11:30 AM' });
+    });
+
+    // Collect Group A Venues
+    const venues = [];
+    [['ga-v1-name', 'ga-v1-cap'], ['ga-v2-name', 'ga-v2-cap'], ['ga-v3-name', 'ga-v3-cap']].forEach(([nId, cId]) => {
+        const name = document.getElementById(nId)?.value?.trim();
+        const cap = parseInt(document.getElementById(cId)?.value || '0');
+        if (name && cap > 0) venues.push({ name: name, capacity: cap });
+    });
+
+    try {
+        const res = await fetch('/api/venues/allocate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                target_group: 'Group A',
+                slots: slots,
+                venues: venues
+            })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            statusEl.innerHTML = `
+                <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
+                    <h3 style="margin-bottom:6px;">🏛️ Group A Venue Optimization Completed!</h3>
+                    <p style="font-size:1.05rem; margin-top:4px;">Allocated <strong>${result.allocated_count}</strong> Group A students across venues with equal branch mixing.</p>
+                </div>`;
+            showToast("Group A venues allocated!", 'success');
+        }
+    } catch (err) {
+        statusEl.innerHTML = `<span style="color:var(--accent-rose)">Group A allocation failed.</span>`;
+        showToast("Group A allocation failed", 'error');
+    }
+}
+
+// 4. Step 4: Group B Venue Allocation
+async function runGroupBVenueAllocation() {
+    const statusEl = document.getElementById('gb-venue-status');
+    statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing Branch-Mixing Solver for Group B...</span>';
+
+    // Collect Group B Slots
+    const slots = [];
+    ['gb-slot-1', 'gb-slot-2'].forEach(id => {
+        const val = document.getElementById(id)?.value?.trim();
+        if (val) slots.push({ slot_name: val, start_time: '09:30 AM', end_time: '11:30 AM' });
+    });
+
+    // Collect Group B Venues
+    const venues = [];
+    [['gb-v1-name', 'gb-v1-cap'], ['gb-v2-name', 'gb-v2-cap']].forEach(([nId, cId]) => {
+        const name = document.getElementById(nId)?.value?.trim();
+        const cap = parseInt(document.getElementById(cId)?.value || '0');
+        if (name && cap > 0) venues.push({ name: name, capacity: cap });
+    });
+
+    try {
+        const res = await fetch('/api/venues/allocate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                target_group: 'Group B',
+                slots: slots,
+                venues: venues
+            })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            statusEl.innerHTML = `
+                <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
+                    <h3 style="margin-bottom:6px;">🏛️ Group B Venue Optimization Completed!</h3>
+                    <p style="font-size:1.05rem; margin-top:4px;">Allocated <strong>${result.allocated_count}</strong> Group B students across venues with equal branch mixing.</p>
+                </div>`;
+            showToast("Group B venues allocated!", 'success');
+        }
+    } catch (err) {
+        statusEl.innerHTML = `<span style="color:var(--accent-rose)">Group B allocation failed.</span>`;
+        showToast("Group B allocation failed", 'error');
+    }
+}
+
+// Student Database View
 async function loadStudents() {
     const search = document.getElementById('student-search-input')?.value || '';
     const group = document.getElementById('student-group-filter')?.value || '';
@@ -255,32 +398,7 @@ async function loadStudents() {
     }
 }
 
-// 4. Group Allocation View
-async function runGroupAllocation() {
-    const statusEl = document.getElementById('group-alloc-status');
-    statusEl.innerHTML = '<span style="color:var(--accent-cyan); font-weight:600;">⚡ Computing SHA-256 Stratified Split...</span>';
-
-    try {
-        const res = await fetch('/api/group/allocate', { method: 'POST' });
-        const result = await res.json();
-
-        if (result.success) {
-            statusEl.innerHTML = `
-                <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
-                    <h3 style="margin-bottom:6px;">🎉 Group Stratification Completed!</h3>
-                    <p style="font-size:1rem; margin-top:4px;">Group A: <strong>${result.group_a_count}</strong> | Group B: <strong>${result.group_b_count}</strong></p>
-                    <p style="font-size:0.8rem; opacity:0.8; margin-top:6px;">Execution Time: ${result.execution_time_seconds.toFixed(2)}s</p>
-                </div>`;
-            showToast("Group Stratification complete!", 'success');
-            loadDashboard();
-        }
-    } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--accent-rose)">Allocation failed.</span>`;
-        showToast("Allocation failed", 'error');
-    }
-}
-
-// 5. Venue Allocation View
+// Venue Manager View
 async function loadVenues() {
     try {
         const res = await fetch('/api/venues');
@@ -370,36 +488,7 @@ async function deleteSlot(id) {
     }
 }
 
-async function runVenueAllocation() {
-    const statusEl = document.getElementById('venue-alloc-status');
-    const targetGroup = document.getElementById('venue-target-group-select')?.value || 'All';
-    statusEl.innerHTML = `<span style="color:var(--accent-cyan); font-weight:600;">🚀 Executing MILP Branch-Mixing Solver for ${targetGroup}...</span>`;
-
-    try {
-        const res = await fetch('/api/venues/allocate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ target_group: targetGroup })
-        });
-        const result = await res.json();
-
-        if (result.success) {
-            statusEl.innerHTML = `
-                <div style="padding:20px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16,185,129,0.3); border-radius:14px; color:var(--accent-emerald);">
-                    <h3 style="margin-bottom:6px;">🏛️ Venue Optimization Completed!</h3>
-                    <p style="font-size:1rem; margin-top:4px;">Target: <strong>${targetGroup}</strong> | Allocated Students: <strong>${result.allocated_count}</strong></p>
-                    <p style="font-size:0.8rem; opacity:0.8; margin-top:6px;">Equal branch distribution applied across venues.</p>
-                </div>`;
-            showToast(`Venue allocation complete for ${targetGroup}!`, 'success');
-            loadVenues();
-        }
-    } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--accent-rose)">Venue allocation failed.</span>`;
-        showToast("Venue allocation failed", 'error');
-    }
-}
-
-// 6. Backup & Rollback View
+// Backup & Rollback View
 async function loadBackups() {
     try {
         const res = await fetch('/api/backups');
@@ -446,7 +535,7 @@ async function restoreBackup(id) {
     }
 }
 
-// 7. Audit Logs View
+// Audit Logs View
 async function loadLogs() {
     try {
         const res = await fetch('/api/logs');

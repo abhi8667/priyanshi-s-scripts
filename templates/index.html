@@ -25,19 +25,49 @@
         </div>
         <nav class="nav-links">
             <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-            <button class="nav-btn" data-tab="import">📥 Import</button>
+            <button class="nav-btn" data-tab="import">📥 1. Upload</button>
+            <button class="nav-btn" data-tab="groups">🔀 2. Split A/B</button>
+            <button class="nav-btn" data-tab="group-a-venues">📗 3. Group A Venues</button>
+            <button class="nav-btn" data-tab="group-b-venues">📙 4. Group B Venues</button>
+            <button class="nav-btn" data-tab="exports">📤 5. Reports</button>
             <button class="nav-btn" data-tab="students">👥 Students</button>
-            <button class="nav-btn" data-tab="groups">🔀 Groups</button>
-            <button class="nav-btn" data-tab="venues">🏛️ Venues</button>
             <button class="nav-btn" data-tab="backups">🛡️ Backups</button>
-            <button class="nav-btn" data-tab="exports">📤 Exports</button>
             <button class="nav-btn" data-tab="logs">📜 Logs</button>
         </nav>
     </header>
 
     <!-- Main Container -->
     <main class="main-content">
-        <!-- 1. Dashboard View -->
+
+        <!-- Guided Stepper Bar -->
+        <div class="wizard-stepper glass-panel">
+            <div class="step-item active" data-tab="import">
+                <span class="step-num">1</span>
+                <span class="step-label">Upload Excel</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step-item" data-tab="groups">
+                <span class="step-num">2</span>
+                <span class="step-label">Group A/B Split</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step-item" data-tab="group-a-venues">
+                <span class="step-num">3</span>
+                <span class="step-label">Group A Venues</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step-item" data-tab="group-b-venues">
+                <span class="step-num">4</span>
+                <span class="step-label">Group B Venues</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step-item" data-tab="exports">
+                <span class="step-num">5</span>
+                <span class="step-label">Download Reports</span>
+            </div>
+        </div>
+
+        <!-- 0. Dashboard View -->
         <section id="dashboard" class="tab-pane active">
             <div class="stats-grid">
                 <div class="stat-card glass-panel">
@@ -98,17 +128,17 @@
             </div>
         </section>
 
-        <!-- 2. Import View -->
+        <!-- STEP 1: Import View -->
         <section id="import" class="tab-pane">
             <div class="section-card glass-panel">
                 <div class="section-header">
-                    <span class="section-title">📥 Ingest Student Dataset (Excel / CSV)</span>
+                    <span class="section-title">📥 Step 1: Ingest Candidate Excel Sheet</span>
                 </div>
                 <div class="drop-zone" id="file-drop-zone">
                     <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none">
                     <div style="font-size:3rem; margin-bottom:12px;">📁</div>
-                    <div style="font-weight:700; font-size:1.1rem; margin-bottom:6px;">Tap or Drop Excel / CSV File Here</div>
-                    <div style="font-size:0.85rem; color:var(--text-muted);">Supports Levenshtein header matching for candidate lists</div>
+                    <div style="font-weight:700; font-size:1.1rem; margin-bottom:6px;">Tap or Drop Excel / CSV Candidate File Here</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Parses USN, Student Name, Branch/Department, and Gender</div>
                 </div>
                 <div id="upload-status" style="margin-top:16px; font-weight:600;"></div>
 
@@ -116,51 +146,18 @@
                     <h3 style="margin-bottom:16px;">RapidFuzz Header Alias Matcher</h3>
                     <div id="mapping-container"></div>
                     <button id="commit-import-btn" class="btn btn-primary" style="margin-top:20px; width:100%; font-size:1rem; padding:14px;">
-                        ✨ Commit Import & Save Records
+                        ✨ Commit Import & Proceed to Step 2 ➔
                     </button>
                     <div id="commit-message" style="margin-top:16px;"></div>
                 </div>
             </div>
         </section>
 
-        <!-- 3. Students Database View -->
-        <section id="students" class="tab-pane">
-            <div class="section-card glass-panel">
-                <div class="section-header" style="flex-wrap:wrap; gap:12px;">
-                    <span class="section-title">👥 Student Roster Directory</span>
-                    <span id="students-count-lbl" style="font-size:0.85rem; color:var(--text-muted); font-weight:600;"></span>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-bottom:20px;">
-                    <input type="text" id="student-search-input" class="form-control" placeholder="🔍 Search USN, Name, Number..." onkeyup="loadStudents()">
-                    <select id="student-group-filter" class="form-select" onchange="loadStudents()">
-                        <option value="">All Groups</option>
-                        <option value="Group A">Group A</option>
-                        <option value="Group B">Group B</option>
-                    </select>
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>USN / ID</th>
-                                <th>Full Name</th>
-                                <th>Department</th>
-                                <th>Group</th>
-                                <th>Venue</th>
-                                <th>Time Slot</th>
-                            </tr>
-                        </thead>
-                        <tbody id="students-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- 4. Group Allocation View -->
+        <!-- STEP 2: Group Stratification View -->
         <section id="groups" class="tab-pane">
             <div class="section-card glass-panel" style="text-align:center; padding:48px 24px;">
                 <div style="font-size:3.5rem; margin-bottom:16px;">🔀</div>
-                <h2 style="margin-bottom:12px; font-weight:800;">SHA-256 Stratified Group Allocation</h2>
+                <h2 style="margin-bottom:12px; font-weight:800;">Step 2: Stratify into Group A & Group B</h2>
                 <p style="color:var(--text-secondary); max-width:650px; margin: 0 auto 28px auto; line-height:1.6;">
                     Deterministically balances students into Group A & Group B using SHA-256 USN digest hashes. 
                     Guarantees equal gender & department distribution with strict immutability.
@@ -169,10 +166,182 @@
                     ⚡ Execute Group Stratification
                 </button>
                 <div id="group-alloc-status" style="margin-top:28px;"></div>
+                
+                <div style="margin-top:32px;">
+                    <button onclick="switchTab('group-a-venues')" class="btn btn-secondary" style="font-size:1rem; padding:12px 28px;">
+                        Proceed to Step 3: Configure Group A Venues ➔
+                    </button>
+                </div>
             </div>
         </section>
 
-        <!-- 5. Venue Allocation View -->
+        <!-- STEP 3: Group A Venues & Slots View -->
+        <section id="group-a-venues" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">📗 Step 3: Configure Slots & Venues for Group A</span>
+                </div>
+                <p style="color:var(--text-secondary); margin-bottom:24px;">
+                    Define the number of time slots for Group A and assign venues available for Group A. 
+                    The solver will divide Group A students equally across venues by branch.
+                </p>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-bottom:28px;">
+                    <!-- Group A Slot Setup -->
+                    <div class="glass-panel" style="padding:20px; border-radius:14px;">
+                        <h4 style="margin-bottom:14px;">⏰ Group A Time Slots (e.g. 3 Slots)</h4>
+                        <div class="form-group">
+                            <label class="form-label">Slot 1 Name</label>
+                            <input type="text" id="ga-slot-1" class="form-control" value="Slot 1 (Morning)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Slot 2 Name (Optional)</label>
+                            <input type="text" id="ga-slot-2" class="form-control" value="Slot 2 (Afternoon)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Slot 3 Name (Optional)</label>
+                            <input type="text" id="ga-slot-3" class="form-control" value="Slot 3 (Evening)">
+                        </div>
+                    </div>
+
+                    <!-- Group A Venue Setup -->
+                    <div class="glass-panel" style="padding:20px; border-radius:14px;">
+                        <h4 style="margin-bottom:14px;">🏛️ Group A Venues & Capacities</h4>
+                        <div class="form-group">
+                            <label class="form-label">Venue 1 (Name & Seat Capacity)</label>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                                <input type="text" id="ga-v1-name" class="form-control" value="Main Auditorium">
+                                <input type="number" id="ga-v1-cap" class="form-control" value="250">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Venue 2 (Name & Seat Capacity)</label>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                                <input type="text" id="ga-v2-name" class="form-control" value="Seminar Hall 1">
+                                <input type="number" id="ga-v2-cap" class="form-control" value="150">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Venue 3 (Name & Seat Capacity)</label>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                                <input type="text" id="ga-v3-name" class="form-control" value="Computer Lab 1">
+                                <input type="number" id="ga-v3-cap" class="form-control" value="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center;">
+                    <button id="run-ga-venue-btn" class="btn btn-primary" style="font-size:1.05rem; padding:14px 36px;">
+                        ⚡ Allocate Group A Venues (Equal Branch Mix)
+                    </button>
+                    <div id="ga-venue-status" style="margin-top:20px;"></div>
+                    
+                    <div style="margin-top:28px;">
+                        <button onclick="switchTab('group-b-venues')" class="btn btn-secondary" style="font-size:1rem; padding:12px 28px;">
+                            Proceed to Step 4: Configure Group B Venues ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 4: Group B Venues & Slots View -->
+        <section id="group-b-venues" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">📙 Step 4: Configure Slots & Venues for Group B</span>
+                </div>
+                <p style="color:var(--text-secondary); margin-bottom:24px;">
+                    Define the number of time slots for Group B (e.g. 1 slot). 
+                    If Group B uses fewer slots than Group A, unused slot columns will be left cleanly blank in the master Excel report.
+                </p>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-bottom:28px;">
+                    <!-- Group B Slot Setup -->
+                    <div class="glass-panel" style="padding:20px; border-radius:14px;">
+                        <h4 style="margin-bottom:14px;">⏰ Group B Time Slots (e.g. 1 Slot)</h4>
+                        <div class="form-group">
+                            <label class="form-label">Slot 1 Name</label>
+                            <input type="text" id="gb-slot-1" class="form-control" value="Slot 1 (Morning Batch)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Slot 2 Name (Optional)</label>
+                            <input type="text" id="gb-slot-2" class="form-control" placeholder="Leave blank if only 1 slot needed">
+                        </div>
+                    </div>
+
+                    <!-- Group B Venue Setup -->
+                    <div class="glass-panel" style="padding:20px; border-radius:14px;">
+                        <h4 style="margin-bottom:14px;">🏛️ Group B Venues & Capacities</h4>
+                        <div class="form-group">
+                            <label class="form-label">Venue 1 (Name & Seat Capacity)</label>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                                <input type="text" id="gb-v1-name" class="form-control" value="Main Auditorium">
+                                <input type="number" id="gb-v1-cap" class="form-control" value="250">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Venue 2 (Name & Seat Capacity)</label>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                                <input type="text" id="gb-v2-name" class="form-control" value="Seminar Hall 1">
+                                <input type="number" id="gb-v2-cap" class="form-control" value="150">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center;">
+                    <button id="run-gb-venue-btn" class="btn btn-primary" style="font-size:1.05rem; padding:14px 36px;">
+                        ⚡ Allocate Group B Venues (Equal Branch Mix)
+                    </button>
+                    <div id="gb-venue-status" style="margin-top:20px;"></div>
+
+                    <div style="margin-top:28px;">
+                        <button onclick="switchTab('exports')" class="btn btn-secondary" style="font-size:1rem; padding:12px 28px;">
+                            Proceed to Step 5: Download Final Excel Reports ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 5: Exports View -->
+        <section id="exports" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header">
+                    <span class="section-title">📤 Step 5: Download Multi-Format Excel Reports</span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📗</div>
+                        <h3 style="margin-bottom:6px;">Group A Excel</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Group A Student USNs, Branches, Slots & Venues</p>
+                        <a href="/api/export/excel?group=Group%20A" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Group A .XLSX</a>
+                    </div>
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📙</div>
+                        <h3 style="margin-bottom:6px;">Group B Excel</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Group B Student USNs, Branches, Slots & Venues</p>
+                        <a href="/api/export/excel?group=Group%20B" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Group B .XLSX</a>
+                    </div>
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📘</div>
+                        <h3 style="margin-bottom:6px;">Combined Master Excel</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">All Students & Multi-Tab Report (Group B unassigned slots left empty)</p>
+                        <a href="/api/export/excel?group=Master" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Combined .XLSX</a>
+                    </div>
+                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
+                        <div style="font-size:2.8rem; margin-bottom:8px;">📄</div>
+                        <h3 style="margin-bottom:6px;">Printable PDF Attendance</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">ReportLab PDF Attendance Rosters</p>
+                        <a href="/api/export/pdf" class="btn btn-secondary" style="width:100%; text-decoration:none;">Download PDF</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Venues Manager Tab -->
         <section id="venues" class="tab-pane">
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-bottom:28px;">
                 <!-- Add Venue Card -->
@@ -221,29 +390,42 @@
                 <h3 style="margin-bottom:16px;">⏰ Time Slots</h3>
                 <div id="slots-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px;"></div>
             </div>
+        </section>
 
-            <!-- Run Solver Card -->
-            <div class="section-card glass-panel" style="text-align:center; padding:40px 24px;">
-                <h2 style="margin-bottom:10px;">PuLP MILP Venue Constraint Solver</h2>
-                <p style="color:var(--text-secondary); max-width:600px; margin: 0 auto 20px auto;">
-                    Proportionally distributes branches across venues so cohort groups interact across departments.
-                </p>
-                <div style="max-width:320px; margin: 0 auto 20px auto;">
-                    <label class="form-label" style="text-align:left;">Target Group for Venue Allocation</label>
-                    <select id="venue-target-group-select" class="form-select">
-                        <option value="All">All Groups (Group A + Group B)</option>
-                        <option value="Group A">Target: Group A Only</option>
-                        <option value="Group B">Target: Group B Only</option>
+        <!-- Students Database View -->
+        <section id="students" class="tab-pane">
+            <div class="section-card glass-panel">
+                <div class="section-header" style="flex-wrap:wrap; gap:12px;">
+                    <span class="section-title">👥 Student Roster Directory</span>
+                    <span id="students-count-lbl" style="font-size:0.85rem; color:var(--text-muted); font-weight:600;"></span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-bottom:20px;">
+                    <input type="text" id="student-search-input" class="form-control" placeholder="🔍 Search USN, Name, Number..." onkeyup="loadStudents()">
+                    <select id="student-group-filter" class="form-select" onchange="loadStudents()">
+                        <option value="">All Groups</option>
+                        <option value="Group A">Group A</option>
+                        <option value="Group B">Group B</option>
                     </select>
                 </div>
-                <button id="run-venue-btn" class="btn btn-primary" style="padding:14px 36px; font-size:1.05rem;">
-                    🚀 Solve Venue Allocation
-                </button>
-                <div id="venue-alloc-status" style="margin-top:24px;"></div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>USN / ID</th>
+                                <th>Full Name</th>
+                                <th>Department</th>
+                                <th>Group</th>
+                                <th>Venue</th>
+                                <th>Time Slot</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-tbody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- 6. Backup & Rollback View -->
+        <!-- Backup & Rollback View -->
         <section id="backups" class="tab-pane">
             <div class="section-card glass-panel">
                 <div class="section-header">
@@ -266,42 +448,7 @@
             </div>
         </section>
 
-        <!-- 7. Export Center View -->
-        <section id="exports" class="tab-pane">
-            <div class="section-card glass-panel">
-                <div class="section-header">
-                    <span class="section-title">📤 Enterprise Multi-Format Export Center</span>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
-                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:2.8rem; margin-bottom:8px;">📗</div>
-                        <h3 style="margin-bottom:6px;">Group A Excel</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Group A Student USNs, Branches, Slots & Venues</p>
-                        <a href="/api/export/excel?group=Group%20A" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Group A .XLSX</a>
-                    </div>
-                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:2.8rem; margin-bottom:8px;">📙</div>
-                        <h3 style="margin-bottom:6px;">Group B Excel</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">Group B Student USNs, Branches, Slots & Venues</p>
-                        <a href="/api/export/excel?group=Group%20B" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Group B .XLSX</a>
-                    </div>
-                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:2.8rem; margin-bottom:8px;">📘</div>
-                        <h3 style="margin-bottom:6px;">Combined Master Excel</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">All Students & Multi-Tab Report (Master, Group A, Group B)</p>
-                        <a href="/api/export/excel?group=Master" class="btn btn-primary" style="width:100%; text-decoration:none;">Download Combined .XLSX</a>
-                    </div>
-                    <div class="glass-panel" style="padding:24px; border-radius:var(--radius-md); text-align:center;">
-                        <div style="font-size:2.8rem; margin-bottom:8px;">📄</div>
-                        <h3 style="margin-bottom:6px;">Printable PDF Attendance</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">ReportLab PDF Attendance Rosters</p>
-                        <a href="/api/export/pdf" class="btn btn-secondary" style="width:100%; text-decoration:none;">Download PDF</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 8. Audit Logs View -->
+        <!-- Audit Logs View -->
         <section id="logs" class="tab-pane">
             <div class="section-card glass-panel">
                 <div class="section-header">

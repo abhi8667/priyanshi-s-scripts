@@ -292,12 +292,37 @@ def delete_slot(slot_id: int):
     finally:
         session.close()
 
+class SlotConfig(BaseModel):
+    slot_name: str
+    start_time: str = "09:00 AM"
+    end_time: str = "11:00 AM"
+
+class VenueConfig(BaseModel):
+    name: str
+    capacity: int
+
 class VenueAllocationRequest(BaseModel):
     target_group: Optional[str] = None
+    slots: Optional[List[SlotConfig]] = None
+    venues: Optional[List[VenueConfig]] = None
 
 @app.post("/api/venues/allocate")
 def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
+    session = SessionLocal()
     try:
+        if req:
+            # Inline creation of time slots if specified
+            if req.slots and len(req.slots) > 0:
+                for idx, s in enumerate(req.slots, 1):
+                    Repository.get_or_create_time_slot(session, s.slot_name, s.start_time, s.end_time, day_number=idx)
+            
+            # Inline creation of venues if specified
+            if req.venues and len(req.venues) > 0:
+                for v in req.venues:
+                    Repository.get_or_create_venue(session, v.name, v.capacity)
+            
+            session.commit()
+
         grp = req.target_group if req and req.target_group and req.target_group != "All" else None
         res = VenueOptimizer.optimize_allocations(target_group=grp)
         return JSONResponse(content={
@@ -310,6 +335,8 @@ def run_venue_allocation(req: Optional[VenueAllocationRequest] = None):
         })
     except Exception as e:
         return JSONResponse(content={"success": False, "detail": str(e)}, status_code=500)
+    finally:
+        session.close()
 
 # --- Backup & Rollback APIs ---
 class RestoreBackupRequest(BaseModel):
