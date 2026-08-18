@@ -216,31 +216,31 @@
             </div>
         </section>
 
-        <!-- STEP 3: Group A Venues & Slots View -->
+        <!-- STEP 3: Group A Venues & Events View -->
         <section id="group-a-venues" class="tab-pane">
             <div class="card-panel raised">
                 <div class="card-title">
-                    <i class="fa-solid fa-building-user text-[#E8A552]"></i> Step 3: Configure Slots & Venues for Group A
+                    <i class="fa-solid fa-building-user text-[#E8A552]"></i> Step 3: Configure Program Events & Venues for Group A
                 </div>
                 <p class="font-body text-sm text-[#8A7F73] mb-6">
-                    Add as many time slots and venues as you need for Group A. 
-                    The solver will divide Group A students equally across all configured venues by branch.
+                    Define as many program events (e.g. Inauguration, Lab Visit, Workshop) and venues as you need for Group A. 
+                    The solver will divide Group A students equally across all venues for EACH event with equal branch mixing.
                 </p>
 
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-bottom:28px;">
-                    <!-- Group A Slot Setup -->
+                    <!-- Group A Event Setup -->
                     <div class="card-panel dim">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-display font-semibold text-md text-[#4A4239]">
-                                <i class="fa-solid fa-clock text-[#E8A552]"></i> Group A Time Slots
+                                <i class="fa-solid fa-calendar-check text-[#E8A552]"></i> Group A Program Events
                             </h4>
                             <button onclick="addDynamicSlot('ga')" class="btn btn-raised" style="padding:6px 14px; font-size:0.8rem;">
-                                + Add Slot
+                                + Add Event
                             </button>
                         </div>
                         <div id="ga-slots-container">
                             <div class="form-group ga-slot-row flex items-center gap-2 mb-3">
-                                <input type="text" class="form-control ga-slot-input" value="Slot 1 (Morning)">
+                                <input type="text" class="form-control ga-slot-input" value="Event 1 (Inauguration)" placeholder="Event Name">
                             </div>
                         </div>
                     </div>
@@ -270,44 +270,44 @@
 
                 <div style="text-align:center;">
                     <button id="run-ga-venue-btn" class="btn btn-amber" style="padding:16px 36px;">
-                        <i class="fa-solid fa-bolt"></i> Allocate Group A Venues (Equal Branch Mix)
+                        <i class="fa-solid fa-bolt"></i> Allocate Group A Events (Equal Branch Mix)
                     </button>
                     <div id="ga-venue-status" style="margin-top:20px;"></div>
                     
                     <div style="margin-top:28px;">
                         <button onclick="switchTab('group-b-venues')" class="btn btn-raised">
-                            Proceed to Step 4: Configure Group B Venues ➔
+                            Proceed to Step 4: Configure Group B Events ➔
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- STEP 4: Group B Venues & Slots View -->
+        <!-- STEP 4: Group B Venues & Events View -->
         <section id="group-b-venues" class="tab-pane">
             <div class="card-panel raised">
                 <div class="card-title">
-                    <i class="fa-solid fa-building-user text-[#7FB069]"></i> Step 4: Configure Slots & Venues for Group B
+                    <i class="fa-solid fa-building-user text-[#7FB069]"></i> Step 4: Configure Program Events & Venues for Group B
                 </div>
                 <p class="font-body text-sm text-[#8A7F73] mb-6">
-                    Add as many time slots and venues as you need for Group B. 
-                    If Group B uses fewer slots than Group A, unused slot columns will be left cleanly blank in the master Excel report.
+                    Define as many program events and venues as you need for Group B. 
+                    If Group B defines fewer events than Group A (e.g. Group B has 1 event while Group A had 3), the extra event columns for Group B will be left cleanly blank in the master Excel report.
                 </p>
 
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-bottom:28px;">
-                    <!-- Group B Slot Setup -->
+                    <!-- Group B Event Setup -->
                     <div class="card-panel dim">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-display font-semibold text-md text-[#4A4239]">
-                                <i class="fa-solid fa-clock text-[#7FB069]"></i> Group B Time Slots
+                                <i class="fa-solid fa-calendar-check text-[#7FB069]"></i> Group B Program Events
                             </h4>
                             <button onclick="addDynamicSlot('gb')" class="btn btn-raised" style="padding:6px 14px; font-size:0.8rem;">
-                                + Add Slot
+                                + Add Event
                             </button>
                         </div>
                         <div id="gb-slots-container">
                             <div class="form-group gb-slot-row flex items-center gap-2 mb-3">
-                                <input type="text" class="form-control gb-slot-input" value="Slot 1 (Morning Batch)">
+                                <input type="text" class="form-control gb-slot-input" value="Event 1 (Orientation)" placeholder="Event Name">
                             </div>
                         </div>
                     </div>
@@ -337,7 +337,7 @@
 
                 <div style="text-align:center;">
                     <button id="run-gb-venue-btn" class="btn btn-sage" style="padding:16px 36px;">
-                        <i class="fa-solid fa-bolt"></i> Allocate Group B Venues (Equal Branch Mix)
+                        <i class="fa-solid fa-bolt"></i> Allocate Group B Events (Equal Branch Mix)
                     </button>
                     <div id="gb-venue-status" style="margin-top:20px;"></div>
 

@@ -82,6 +82,19 @@ class Student(Base):
     venue: Mapped[Optional["Venue"]] = relationship("Venue", back_populates="students")
     time_slot: Mapped[Optional["TimeSlot"]] = relationship("TimeSlot", back_populates="students")
     import_history: Mapped[Optional["ImportHistory"]] = relationship("ImportHistory", back_populates="students")
+    event_allocations: Mapped[List["StudentEventAllocation"]] = relationship("StudentEventAllocation", back_populates="student", cascade="all, delete-orphan")
+
+class StudentEventAllocation(Base):
+    __tablename__ = "student_event_allocations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id"), nullable=False, index=True)
+    event_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    venue_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    group_name: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    student: Mapped["Student"] = relationship("Student", back_populates="event_allocations")
 
 class ImportHistory(Base):
     __tablename__ = "import_history"

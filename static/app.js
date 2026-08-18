@@ -383,7 +383,7 @@ function addDynamicSlot(prefix) {
     const div = document.createElement('div');
     div.className = `form-group ${prefix}-slot-row flex items-center gap-2 mb-3`;
     div.innerHTML = `
-        <input type="text" class="form-control ${prefix}-slot-input" placeholder="Slot ${count} Name (e.g. Afternoon Batch)">
+        <input type="text" class="form-control ${prefix}-slot-input" placeholder="Event ${count} Name (e.g. Lab Visit / Workshop)">
         <button onclick="this.parentElement.remove()" class="btn btn-raised" style="padding:6px 10px; font-size:0.75rem; color:var(--accent-rose);" title="Remove">✕</button>
     `;
     container.appendChild(div);

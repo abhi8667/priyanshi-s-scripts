@@ -46,10 +46,25 @@ class ExportService:
 
             students = query.order_by(Student.group_name.asc(), Student.usn.asc()).all()
 
+            # Query all distinct event names from StudentEventAllocation
+            from database.models import StudentEventAllocation
+            event_allocs = session.query(StudentEventAllocation).order_by(StudentEventAllocation.id.asc()).all()
+            
+            # Preserve order of distinct event names
+            event_names = []
+            alloc_lookup = {}
+            for a in event_allocs:
+                if a.event_name not in event_names:
+                    event_names.append(a.event_name)
+                alloc_lookup[(a.student_id, a.event_name)] = a.venue_name
+
+            if not event_names:
+                event_names = ["Venue"]
+
             header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
             header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
 
-            columns = ["USN", "Full Name", "Gender", "Department", "Group", "Venue", "Time Slot"]
+            columns = ["USN", "Full Name", "Gender", "Department", "Group"] + event_names
 
             title = f"{group_name} Allocations" if group_name else "Master Allocation"
             ws = wb.create_sheet(title=title[:31])
@@ -67,10 +82,13 @@ class ExportService:
                     cls.sanitize_cell(s.full_name),
                     cls.sanitize_cell(s.gender),
                     cls.sanitize_cell(s.department.name if s.department else ""),
-                    cls.sanitize_cell(s.group_name or ""),
-                    cls.sanitize_cell(s.venue.name if s.venue else ""),
-                    cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else "")
+                    cls.sanitize_cell(s.group_name or "")
                 ]
+                for evt_name in event_names:
+                    v_name = alloc_lookup.get((s.id, evt_name))
+                    if not v_name and s.venue:
+                        v_name = s.venue.name
+                    row.append(cls.sanitize_cell(v_name or ""))
                 ws.append(row)
 
             # If exporting Combined Master, add individual tabs for Group A, Group B
@@ -86,15 +104,19 @@ class ExportService:
                     
                     grp_students = [s for s in students if s.group_name == grp]
                     for s in grp_students:
-                        ws_grp.append([
+                        row = [
                             cls.sanitize_cell(s.usn),
                             cls.sanitize_cell(s.full_name),
                             cls.sanitize_cell(s.gender),
                             cls.sanitize_cell(s.department.name if s.department else ""),
-                            cls.sanitize_cell(s.group_name or ""),
-                            cls.sanitize_cell(s.venue.name if s.venue else ""),
-                            cls.sanitize_cell(s.time_slot.slot_name if s.time_slot else "")
-                        ])
+                            cls.sanitize_cell(s.group_name or "")
+                        ]
+                        for evt_name in event_names:
+                            v_name = alloc_lookup.get((s.id, evt_name))
+                            if not v_name and s.venue:
+                                v_name = s.venue.name
+                            row.append(cls.sanitize_cell(v_name or ""))
+                        ws_grp.append(row)
 
             # Auto-fit columns
             for sheet in wb.worksheets:

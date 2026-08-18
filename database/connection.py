@@ -52,7 +52,7 @@ def get_db_session():
 
 def init_db():
     """Creates all database tables defined in models and applies schema migrations."""
-    from database.models import Student, Department, Program, Venue, TimeSlot, ImportHistory, BackupHistory, AuditLog, AppSettings
+    from database.models import Student, Department, Program, Venue, TimeSlot, ImportHistory, BackupHistory, AuditLog, AppSettings, StudentEventAllocation
     Base.metadata.create_all(bind=engine)
 
     # Auto-migration for SQLite: ensure import_history_id exists on students table
