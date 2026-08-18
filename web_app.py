@@ -125,7 +125,7 @@ async def upload_import_file(file: UploadFile = File(...)):
     # Analyze headers using ColumnMapper
     importer = DataImporter()
     raw_headers = importer.extract_headers(str(file_path))
-    mappings, confidence_scores = ColumnMapper.map_headers(raw_headers)
+    mappings, unmapped, missing_required = ColumnMapper.map_columns(raw_headers)
 
     cache_id = file_path.name
     temp_import_cache[cache_id] = {
@@ -135,13 +135,16 @@ async def upload_import_file(file: UploadFile = File(...)):
         "mappings": mappings
     }
 
+    from engine.column_mapper import INTERNAL_FIELDS
+    canonical_fields = list(INTERNAL_FIELDS.keys())
+
     return JSONResponse(content={
         "cache_id": cache_id,
         "file_name": file.filename,
         "raw_headers": raw_headers,
         "suggested_mappings": mappings,
-        "confidence_scores": confidence_scores,
-        "canonical_fields": ColumnMapper.CANONICAL_FIELDS
+        "missing_required": missing_required,
+        "canonical_fields": canonical_fields
     })
 
 class CommitImportRequest(BaseModel):
