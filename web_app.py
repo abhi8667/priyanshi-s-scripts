@@ -161,13 +161,7 @@ def commit_import(req: CommitImportRequest):
 
     session = SessionLocal()
     try:
-        # Soft delete previous student records so the session dataset reflects ONLY the newly uploaded file
-        session.query(Student).filter(Student.is_deleted == False).update(
-            {Student.is_deleted: True},
-            synchronize_session=False
-        )
-        session.commit()
-
+        # Stack uploads cumulatively into cohort (do NOT delete previous uploads)
         res = DataImporter.import_excel(file_path, req.mappings)
 
         total_rows = res.get("total_rows", 0)

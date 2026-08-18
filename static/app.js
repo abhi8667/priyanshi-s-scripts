@@ -180,6 +180,31 @@ async function loadDashboard() {
                 </div>`;
         }
 
+        // Render Branch-Wise Cumulative Distribution
+        const deptList = document.getElementById('dept-dist-list');
+        if (deptList) {
+            deptList.innerHTML = '';
+            const deptDist = data.department_distribution || {};
+            const deptEntries = Object.entries(deptDist);
+            if (deptEntries.length === 0) {
+                deptList.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No student data uploaded yet.</p>';
+            } else {
+                for (const [dept, count] of deptEntries) {
+                    const percent = Math.round((count / total) * 100);
+                    deptList.innerHTML += `
+                        <div style="margin-bottom:14px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.9rem; font-weight:600;">
+                                <span><i class="fa-solid fa-code-branch text-[#7FB069] mr-1"></i> ${dept}</span>
+                                <span style="color:var(--accent-sage); font-weight:700;">${count} (${percent}%)</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${percent}%; background:var(--accent-sage);"></div>
+                            </div>
+                        </div>`;
+                }
+            }
+        }
+
         // Render Recent Imports
         const importsTbody = document.getElementById('recent-imports-tbody');
         importsTbody.innerHTML = '';
